@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AI Defect Detection</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.9.0"></script>
+</head>
+<body>
+  <h2>🏗️ AI Defect Detection Demo</h2>
+  <input type="file" id="imageUpload" accept="image/*">
+  <br><br>
+  <img id="preview" style="max-width:300px; display:none;">
+  <p id="result">Upload an image to analyze.</p>
+
+  <script>
+    let model;
+    async function loadModel() {
+      model = await tf.loadLayersModel(
+        "https://romelmallari599-byte.github.io/ai-defect-model/model.json"
+      );
+      console.log("✅ Model loaded");
+    }
+
+    async function predict(imgElement) {
+      const tensor = tf.browser.fromPixels(imgElement)
+        .resizeNearestNeighbor([224, 224])
+        .toFloat()
+        .expandDims();
+      const prediction = await model.predict(tensor).data();
+      document.getElementById("result").innerText = 
+        "Prediction: " + prediction;
+    }
+
+    document.getElementById("imageUpload").addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const img = document.getElementById("preview");
+        img.src = URL.createObjectURL(file);
+        img.style.display = "block";
+        img.onload = () => predict(img);
+      }
+    });
+
+    loadModel();
+  </script>
+</body>
+</html>
