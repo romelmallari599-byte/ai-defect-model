@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="tl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mean Value Theorem Diagram</title>
+<style>
+:root{--bg:#f3f5f8;--fg:#1b2430;--muted:#5b6675;--line:#d5dbe4}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12161c;--fg:#e6eaf0;--muted:#9aa5b4;--line:#2a323d;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#12161c;--fg:#e6eaf0;--muted:#9aa5b4;--line:#2a323d;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);padding-inline:16px;padding-block:24px;font-family:system-ui,sans-serif}
+main{max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+h1{margin:0;font-size:1.4rem;text-wrap:balance}
+p{margin:0;color:var(--muted);line-height:1.5}
+.fig{background:#fff;border:1px solid var(--line);border-radius:10px;overflow-x:auto}
+</style>
+</head><body><main><h1>Mean Value Theorem</h1><p>f′(c) = [f(b) − f(a)] / (b − a), na may c sa pagitan ng a at b.</p><div class="fig"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1060 620" style="width:100%;min-width:640px;height:auto;display:block" font-family="Arial, Helvetica, sans-serif">
+<title>Mean Value Theorem</title>
+<rect style="width:100%;min-width:640px;height:auto;display:block" fill="#ffffff"/>
+<text x="40" y="36" font-size="22" font-weight="bold" fill="#111">Mean Value Theorem (MVT) sa Differentiation</text>
+<line x1="80" y1="480" x2="80" y2="60" stroke="#eee"/>
+<text x="80" y="498" font-size="12" text-anchor="middle" fill="#555">0</text>
+<line x1="170" y1="480" x2="170" y2="60" stroke="#eee"/>
+<text x="170" y="498" font-size="12" text-anchor="middle" fill="#555">1</text>
+<line x1="260" y1="480" x2="260" y2="60" stroke="#eee"/>
+<text x="260" y="498" font-size="12" text-anchor="middle" fill="#555">2</text>
+<line x1="350" y1="480" x2="350" y2="60" stroke="#eee"/>
+<text x="350" y="498" font-size="12" text-anchor="middle" fill="#555">3</text>
+<line x1="440" y1="480" x2="440" y2="60" stroke="#eee"/>
+<text x="440" y="498" font-size="12" text-anchor="middle" fill="#555">4</text>
+<line x1="530" y1="480" x2="530" y2="60" stroke="#eee"/>
+<text x="530" y="498" font-size="12" text-anchor="middle" fill="#555">5</text>
+<line x1="620" y1="480" x2="620" y2="60" stroke="#eee"/>
+<text x="620" y="498" font-size="12" text-anchor="middle" fill="#555">6</text>
+<line x1="710" y1="480" x2="710" y2="60" stroke="#eee"/>
+<text x="710" y="498" font-size="12" text-anchor="middle" fill="#555">7</text>
+<line x1="80" y1="480" x2="710" y2="480" stroke="#eee"/>
+<text x="72" y="484" font-size="12" text-anchor="end" fill="#555">0</text>
+<line x1="80" y1="410" x2="710" y2="410" stroke="#eee"/>
+<text x="72" y="414" font-size="12" text-anchor="end" fill="#555">1</text>
+<line x1="80" y1="340" x2="710" y2="340" stroke="#eee"/>
+<text x="72" y="344" font-size="12" text-anchor="end" fill="#555">2</text>
+<line x1="80" y1="270" x2="710" y2="270" stroke="#eee"/>
+<text x="72" y="274" font-size="12" text-anchor="end" fill="#555">3</text>
+<line x1="80" y1="200" x2="710" y2="200" stroke="#eee"/>
+<text x="72" y="204" font-size="12" text-anchor="end" fill="#555">4</text>
+<line x1="80" y1="130" x2="710" y2="130" stroke="#eee"/>
+<text x="72" y="134" font-size="12" text-anchor="end" fill="#555">5</text>
+<line x1="80" y1="60" x2="710" y2="60" stroke="#eee"/>
+<text x="72" y="64" font-size="12" text-anchor="end" fill="#555">6</text>
+<line x1="80" y1="480" x2="725" y2="480" stroke="#222" stroke-width="1.5"/>
+<line x1="80" y1="480" x2="80" y2="55" stroke="#222" stroke-width="1.5"/>
+<text x="732" y="485" font-size="15" font-style="italic">x</text>
+<text x="88" y="52" font-size="15" font-style="italic">y</text>
+<path d="M 80.0,410.0 Q 395.0,-80.0 710.0,287.5" fill="none" stroke="#1565c0" stroke-width="3"/>
+<text x="660.5" y="298.0" font-size="16" font-style="italic" fill="#1565c0">y = f(x)</text>
+<line x1="125.0" y1="296.25" x2="665.0" y2="191.25" stroke="#2e7d32" stroke-width="2.5"/>
+<text x="296.0" y="270.0" font-size="14" fill="#2e7d32" transform="rotate(-8.0 296.0 270.0)">secant line AB</text>
+<line x1="260" y1="160.625" x2="530" y2="108.125" stroke="#c62828" stroke-width="2.5"/>
+<text x="134.0" y="77.5" font-size="14" fill="#c62828">tangent line sa x = c</text>
+<text x="134.0" y="95.0" font-size="13" fill="#c62828">(parallel sa secant)</text>
+<line x1="170" y1="480" x2="170" y2="287.5" stroke="#555" stroke-dasharray="5 4"/>
+<line x1="80" y1="287.5" x2="170" y2="287.5" stroke="#555" stroke-dasharray="5 4"/>
+<line x1="395.0" y1="480" x2="395.0" y2="134.375" stroke="#c62828" stroke-dasharray="5 4"/>
+<line x1="80" y1="134.375" x2="395.0" y2="134.375" stroke="#c62828" stroke-dasharray="5 4"/>
+<line x1="620" y1="480" x2="620" y2="200.0" stroke="#555" stroke-dasharray="5 4"/>
+<line x1="80" y1="200.0" x2="620" y2="200.0" stroke="#555" stroke-dasharray="5 4"/>
+<text x="170" y="518" font-size="15" font-weight="bold" text-anchor="middle" fill="#222">a = 1</text>
+<text x="395.0" y="518" font-size="15" font-weight="bold" text-anchor="middle" fill="#c62828">c = 3.5</text>
+<text x="620" y="518" font-size="15" font-weight="bold" text-anchor="middle" fill="#222">b = 6</text>
+<text x="86" y="281.5" font-size="13" fill="#555">f(a) = 2.75</text>
+<text x="86" y="194.0" font-size="13" fill="#555">f(b) = 4</text>
+<text x="86" y="128.375" font-size="13" fill="#c62828">f(c) = 4.9375</text>
+<circle cx="170" cy="287.5" r="6" fill="#2e7d32" stroke="#fff" stroke-width="1.5"/>
+<text x="178" y="311.5" font-size="14" font-weight="bold" fill="#2e7d32">A(1, 2.75)</text>
+<circle cx="620" cy="200.0" r="6" fill="#2e7d32" stroke="#fff" stroke-width="1.5"/>
+<text x="632" y="188.0" font-size="14" font-weight="bold" fill="#2e7d32">B(6, 4)</text>
+<circle cx="395.0" cy="134.375" r="6" fill="#c62828" stroke="#fff" stroke-width="1.5"/>
+<text x="375.0" y="118.375" font-size="14" font-weight="bold" fill="#c62828">C(3.5, 4.9375)</text>
+<rect x="730" y="55" width="315" height="520" rx="10" fill="#f6f8fb" stroke="#d0d7e2"/>
+<text x="745" y="82" font-size="17" font-weight="bold" fill="#222">Ano ang ibig sabihin?</text>
+<text x="745" y="106" font-size="14" font-weight="normal" fill="#222">Kung ang f ay:</text>
+<text x="745" y="126" font-size="14" font-weight="normal" fill="#222">1) tuloy-tuloy (continuous) sa [a, b]</text>
+<text x="745" y="146" font-size="14" font-weight="normal" fill="#222">2) may derivative (differentiable) sa (a, b)</text>
+<text x="745" y="172" font-size="14" font-weight="normal" fill="#222">may kahit isang c sa pagitan ng a at b na:</text>
+<rect x="745" y="184" width="285" height="50" rx="6" fill="#fff" stroke="#c62828"/>
+<text x="887" y="216" font-size="20" text-anchor="middle" fill="#c62828" font-style="italic">f′(c) = [f(b) − f(a)] / (b − a)</text>
+<text x="745" y="262" font-size="15" font-weight="bold" fill="#222">Sa simpleng salita:</text>
+<text x="745" y="284" font-size="14" font-weight="normal" fill="#222">May punto sa curve kung saan ang slope</text>
+<text x="745" y="303" font-size="14" font-weight="normal" fill="#222">ng tangent (instantaneous rate) ay kapareho</text>
+<text x="745" y="322" font-size="14" font-weight="normal" fill="#222">ng average slope mula A hanggang B.</text>
+<text x="745" y="348" font-size="13" font-weight="normal" fill="#444">Halimbawa: kung average speed mo ay</text>
+<text x="745" y="366" font-size="13" font-weight="normal" fill="#444">60 km/h, may sandali na eksaktong 60 km/h</text>
+<text x="745" y="384" font-size="13" font-weight="normal" fill="#444">ang speedometer mo.</text>
+<text x="745" y="418" font-size="15" font-weight="bold" fill="#222">Sa graph na ito</text>
+<text x="745" y="440" font-size="13" font-weight="normal" fill="#222">f(x) = −0.25x² + 2x + 1,   [a, b] = [1, 6]</text>
+<text x="745" y="462" font-size="13" font-weight="normal" fill="#2e7d32">Secant slope = (4 − 2.75)/(6 − 1) = 0.25</text>
+<text x="745" y="484" font-size="13" font-weight="normal" fill="#222">f′(x) = −0.5x + 2</text>
+<text x="745" y="506" font-size="13" font-weight="normal" fill="#c62828">f′(c) = 0.25  →  −0.5c + 2 = 0.25</text>
+<text x="745" y="528" font-size="13" font-weight="bold" fill="#c62828">c = 3.5  (nasa loob ng (1, 6) ✔)</text>
+<text x="745" y="556" font-size="12" font-weight="normal" fill="#555">Ang f(c) = −0.25(3.5)² + 7 + 1 = 4.9375</text>
+</svg></div></main></body></html>
