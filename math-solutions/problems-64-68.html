@@ -1,0 +1,482 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Problem Set 64–68</title><meta name="viewport" content="width=device-width,initial-scale=1"></head><body><title>Problem Set 64–68</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: engineering computation pad — problem + animated figure on the left, worked solution on the right; stacks on phones */
+:root{
+  --paper:#e7f0e2; --sheet:#f7fbf4; --rule:#c4d8bb; --ink:#16251c; --muted:#56695c;
+  --accent:#1d6b47; --x:#1f5fbf; --y:#b4386a; --ans:#a14d00; --ans-bg:#fbeedd;
+  --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"Source Serif 4",Georgia,"Times New Roman",serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#0e1611; --sheet:#151f19; --rule:#2a3b30; --ink:#e3ece5; --muted:#9bb0a2;
+  --accent:#6fcf9c; --x:#82b2ff; --y:#f08bb4; --ans:#f2b45a; --ans-bg:#2e2416; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#0e1611; --sheet:#151f19; --rule:#2a3b30; --ink:#e3ece5; --muted:#9bb0a2;
+  --accent:#6fcf9c; --x:#82b2ff; --y:#f08bb4; --ans:#f2b45a; --ans-bg:#2e2416; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{
+  background-color:var(--paper);
+  background-image:linear-gradient(var(--rule) 1px,transparent 1px),linear-gradient(90deg,var(--rule) 1px,transparent 1px);
+  background-size:24px 24px; background-attachment:fixed;
+  color:var(--ink); font-family:var(--body); font-size:16px; line-height:1.55;
+  padding-inline:16px; padding-block:28px 64px;
+}
+.wrap{max-width:1180px;margin:0 auto;display:grid;gap:28px}
+.top{display:grid;gap:6px}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(34px,6vw,54px);line-height:1;margin:0;text-wrap:balance}
+.lede{margin:0;color:var(--muted);max-width:62ch}
+
+.prob{background:var(--sheet);border:1px solid var(--rule);border-radius:6px;display:grid;
+  grid-template-columns:minmax(0,1.4fr) minmax(0,1fr)}
+.left{padding:22px 24px;display:grid;gap:14px;align-content:start;min-width:0}
+.sol{padding:22px 24px;border-left:1px dashed var(--rule);display:grid;gap:12px;align-content:start;min-width:0}
+@media (max-width:880px){.prob{grid-template-columns:minmax(0,1fr)}.sol{border-left:0;border-top:1px dashed var(--rule)}}
+@media (max-width:480px){.left,.sol{padding:18px 14px}}
+
+.ph{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.num{font-family:var(--display);font-weight:700;font-size:44px;line-height:.9;color:var(--accent);font-variant-numeric:tabular-nums}
+.ph h2{font-family:var(--display);font-weight:600;font-size:26px;margin:0;line-height:1.1}
+.tag{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);border:1px solid var(--rule);padding:2px 8px;border-radius:99px}
+.stmt{margin:0;max-width:68ch}
+.choices{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;font-family:var(--mono);font-size:13px}
+@media (max-width:560px){.choices{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.choices li{border:1px solid var(--rule);border-radius:4px;padding:5px 8px;color:var(--muted)}
+.choices li b{color:var(--ink);font-weight:500;margin-right:6px}
+.choices li.ok{border-color:var(--ans);background:var(--ans-bg);color:var(--ans);font-weight:500}
+.choices li.ok b{color:var(--ans)}
+
+figure{margin:0;border:1px solid var(--rule);border-radius:4px;background:var(--paper);overflow:hidden}
+figure svg{display:block;width:100%;height:auto}
+.ctrl{display:flex;align-items:center;gap:10px;padding:8px 10px;border-top:1px solid var(--rule);background:var(--sheet)}
+.ctrl button{font-family:var(--mono);font-size:12px;background:var(--ink);color:var(--sheet);border:0;border-radius:4px;padding:6px 10px;cursor:pointer;min-width:62px}
+.ctrl button:focus-visible,.ctrl input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.ctrl input[type=range]{flex:1;min-width:0;accent-color:var(--accent)}
+.ctrl .hint{font-family:var(--mono);font-size:11px;color:var(--muted);white-space:nowrap}
+
+.sol h3{font-family:var(--display);font-weight:600;font-size:20px;letter-spacing:.04em;text-transform:uppercase;margin:0;color:var(--muted)}
+.step{display:grid;gap:4px}
+.step .lbl{font-family:var(--mono);font-size:12px;color:var(--accent);letter-spacing:.03em}
+.step p{margin:0;font-size:15px}
+.eq{overflow-x:auto;overflow-y:hidden;padding:2px 0}
+math{font-size:1.12em}
+math[display="block"]{margin:4px 0}
+.ansbox{border:1.5px solid var(--ans);background:var(--ans-bg);color:var(--ans);border-radius:4px;padding:10px 12px;font-family:var(--display);font-weight:600;font-size:22px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.ansbox small{font-family:var(--mono);font-size:12px;font-weight:400;align-self:center}
+table.chk{border-collapse:collapse;font-family:var(--mono);font-size:13px;font-variant-numeric:tabular-nums;width:100%}
+table.chk th,table.chk td{border-bottom:1px solid var(--rule);padding:4px 6px;text-align:right}
+table.chk th{color:var(--muted);font-weight:400}
+table.chk th:first-child,table.chk td:first-child{text-align:left}
+.key{display:inline-block;width:10px;height:10px;border-radius:50%;vertical-align:baseline;margin-right:4px}
+
+/* SVG ink */
+svg text{font-family:var(--mono)}
+.axis{stroke:var(--ink);stroke-width:1.2;fill:none}
+.gridl{stroke:var(--rule);stroke-width:1;fill:none}
+.track{stroke:var(--muted);stroke-width:2;stroke-dasharray:2 5;fill:none}
+.tick{fill:var(--muted);font-size:12px}
+.cap{fill:var(--ink);font-size:13px}
+.big{fill:var(--ink);font-size:15px;font-weight:500}
+.tx{fill:var(--x)} .ty{fill:var(--y)} .ta{fill:var(--ans);font-weight:500} .tg{fill:var(--accent)}
+.sx{stroke:var(--x)} .sy{stroke:var(--y)} .sa{stroke:var(--ans)} .sg{stroke:var(--accent)} .sm{stroke:var(--muted)}
+.fx{fill:var(--x)} .fy{fill:var(--y)} .fa{fill:var(--ans)} .fg{fill:var(--accent)} .fs{fill:var(--sheet)} .fp{fill:var(--paper)}
+.dash{stroke-dasharray:4 4}
+.white{fill:var(--sheet);font-size:12px;font-weight:600}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <span class="eyebrow">Engineering math · worked solutions</span>
+    <h1>Problems 64 to 68</h1>
+    <p class="lede">Each figure is drawn to scale from the actual numbers in the problem. Press play or drag the slider to step through it; the full solution is beside each figure.</p>
+  </header>
+
+  <!-- ============ 64 ============ -->
+  <section class="prob" id="p64">
+    <div class="left">
+      <div class="ph"><span class="num">64</span><h2>Two friends meeting</h2><span class="tag">Uniform motion</span></div>
+      <p class="stmt">Two friends X and Y start from two points M and N and move towards each other and meet at a point P on the way. X and Y travel at speeds of 30 mph and 20 mph, respectively. Had Y traveled at 20% higher speed, X and Y would have met at a point which is 10 miles away from P. How far is the distance between the two friends?</p>
+      <ul class="choices"><li><b>a.</b>350 mi</li><li><b>b.</b>300 mi</li><li class="ok"><b>c.</b>225 mi</li><li><b>d.</b>275 mi</li></ul>
+      <figure><svg id="f64" viewBox="0 0 600 300" role="img" aria-label="X and Y moving toward each other on a 225-mile line, meeting 135 mi from M at normal speed and 125 mi from M when Y is 20 percent faster"></svg>
+        <div class="ctrl"><button class="play" type="button">Pause</button><input type="range" id="r64" min="0" max="1000" value="0" aria-label="Animation time for problem 64"><span class="hint">1 s = 1 hour</span></div></figure>
+    </div>
+    <aside class="sol">
+      <h3>Solution</h3>
+      <div class="step"><span class="lbl">1 · Original meeting point P</span>
+        <p>Let <i>D</i> = MN. They close the gap at 30 + 20 mph.</p>
+        <div class="eq"><math display="block"><mi>t</mi><mo>=</mo><mfrac><mi>D</mi><mrow><mn>30</mn><mo>+</mo><mn>20</mn></mrow></mfrac><mo>=</mo><mfrac><mi>D</mi><mn>50</mn></mfrac></math></div>
+        <div class="eq"><math display="block"><mi>M</mi><mi>P</mi><mo>=</mo><mn>30</mn><mrow><mo>(</mo><mfrac><mi>D</mi><mn>50</mn></mfrac><mo>)</mo></mrow><mo>=</mo><mfrac><mrow><mn>3</mn><mi>D</mi></mrow><mn>5</mn></mfrac></math></div>
+      </div>
+      <div class="step"><span class="lbl">2 · Y is 20% faster</span>
+        <div class="eq"><math display="block"><msubsup><mi>v</mi><mi>Y</mi><mo>′</mo></msubsup><mo>=</mo><mn>1.2</mn><mo>(</mo><mn>20</mn><mo>)</mo><mo>=</mo><mn>24</mn><mtext>&nbsp;mph</mtext></math></div>
+        <div class="eq"><math display="block"><mi>M</mi><msup><mi>P</mi><mo>′</mo></msup><mo>=</mo><mn>30</mn><mrow><mo>(</mo><mfrac><mi>D</mi><mrow><mn>30</mn><mo>+</mo><mn>24</mn></mrow></mfrac><mo>)</mo></mrow><mo>=</mo><mfrac><mrow><mn>5</mn><mi>D</mi></mrow><mn>9</mn></mfrac></math></div>
+      </div>
+      <div class="step"><span class="lbl">3 · P′ is 10 mi closer to M</span>
+        <div class="eq"><math display="block"><mfrac><mrow><mn>3</mn><mi>D</mi></mrow><mn>5</mn></mfrac><mo>−</mo><mfrac><mrow><mn>5</mn><mi>D</mi></mrow><mn>9</mn></mfrac><mo>=</mo><mn>10</mn></math></div>
+        <div class="eq"><math display="block"><mfrac><mrow><mn>27</mn><mi>D</mi><mo>−</mo><mn>25</mn><mi>D</mi></mrow><mn>45</mn></mfrac><mo>=</mo><mfrac><mrow><mn>2</mn><mi>D</mi></mrow><mn>45</mn></mfrac><mo>=</mo><mn>10</mn></math></div>
+        <div class="eq"><math display="block"><mi>D</mi><mo>=</mo><mn>225</mn><mtext>&nbsp;mi</mtext></math></div>
+      </div>
+      <div class="step"><span class="lbl">Check</span>
+        <p>MP = 135 mi at <i>t</i> = 4.50 h; MP′ = 125 mi at <i>t</i> = 4.17 h. The difference is 10 mi.</p>
+      </div>
+      <div class="ansbox">c. 225 mi <small>D = MN</small></div>
+    </aside>
+  </section>
+
+  <!-- ============ 65 ============ -->
+  <section class="prob" id="p65">
+    <div class="left">
+      <div class="ph"><span class="num">65</span><h2>Grass and grazing cows</h2><span class="tag">Recurrence</span></div>
+      <p class="stmt">Grass on a lawn grows every day by a fixed percent of the height on the previous day. However, cows graze and reduce the height of the grass by 1 mm every day. What was the height of the grass on the first day before the cow started grazing? The grass grows every day by 2 percent of the height on the previous day. The grass is completely grazed in 3 days.</p>
+      <ul class="choices"><li><b>a.</b>2.51 mm</li><li><b>b.</b>2.60 mm</li><li class="ok"><b>c.</b>2.88 mm</li><li><b>d.</b>2.74 mm</li></ul>
+      <figure><svg id="f65" viewBox="0 0 600 340" role="img" aria-label="Sawtooth graph of grass height: starts at 2.884 mm, grows 2 percent and is cut 1 mm each day, reaching zero at day 3"></svg>
+        <div class="ctrl"><button class="play" type="button">Pause</button><input type="range" id="r65" min="0" max="1000" value="0" aria-label="Animation time for problem 65"><span class="hint">grow, then graze</span></div></figure>
+    </div>
+    <aside class="sol">
+      <h3>Solution</h3>
+      <div class="step"><span class="lbl">1 · One day = grow 2%, then lose 1 mm</span>
+        <div class="eq"><math display="block"><msub><mi>h</mi><mi>n</mi></msub><mo>=</mo><mn>1.02</mn><mspace width="0.15em"/><msub><mi>h</mi><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>−</mo><mn>1</mn></math></div>
+      </div>
+      <div class="step"><span class="lbl">2 · Unroll three days (h₀ = h)</span>
+        <div class="eq"><math display="block"><msub><mi>h</mi><mn>1</mn></msub><mo>=</mo><mn>1.02</mn><mi>h</mi><mo>−</mo><mn>1</mn></math></div>
+        <div class="eq"><math display="block"><msub><mi>h</mi><mn>2</mn></msub><mo>=</mo><msup><mn>1.02</mn><mn>2</mn></msup><mi>h</mi><mo>−</mo><mn>1.02</mn><mo>−</mo><mn>1</mn></math></div>
+        <div class="eq"><math display="block"><msub><mi>h</mi><mn>3</mn></msub><mo>=</mo><msup><mn>1.02</mn><mn>3</mn></msup><mi>h</mi><mo>−</mo><msup><mn>1.02</mn><mn>2</mn></msup><mo>−</mo><mn>1.02</mn><mo>−</mo><mn>1</mn><mo>=</mo><mn>0</mn></math></div>
+      </div>
+      <div class="step"><span class="lbl">3 · Solve for h</span>
+        <div class="eq"><math display="block"><mi>h</mi><mo>=</mo><mfrac><mrow><mn>1</mn><mo>+</mo><mn>1.02</mn><mo>+</mo><msup><mn>1.02</mn><mn>2</mn></msup></mrow><msup><mn>1.02</mn><mn>3</mn></msup></mfrac><mo>=</mo><mfrac><mn>3.0604</mn><mn>1.061208</mn></mfrac></math></div>
+        <div class="eq"><math display="block"><mi>h</mi><mo>≈</mo><mn>2.88</mn><mtext>&nbsp;mm</mtext></math></div>
+      </div>
+      <div class="step"><span class="lbl">Check (mm)</span>
+        <table class="chk"><thead><tr><th>Day</th><th>after growth</th><th>after grazing</th></tr></thead>
+          <tbody><tr><td>1</td><td>2.942</td><td>1.942</td></tr><tr><td>2</td><td>1.980</td><td>0.980</td></tr><tr><td>3</td><td>1.000</td><td>0.000</td></tr></tbody></table>
+      </div>
+      <div class="ansbox">c. 2.88 mm <small>h = 2.8839 mm</small></div>
+    </aside>
+  </section>
+
+  <!-- ============ 66 ============ -->
+  <section class="prob" id="p66">
+    <div class="left">
+      <div class="ph"><span class="num">66</span><h2>Language survey</h2><span class="tag">Venn diagram</span></div>
+      <p class="stmt">A survey was made of 100 students who study German, French, and Japanese. 51 students study German, while 31 students study German but not French, 9 students study German, French, and Japanese. How many students study both German and French but not Japanese?</p>
+      <ul class="choices"><li class="ok"><b>a.</b>11</li><li><b>b.</b>14</li><li><b>c.</b>16</li><li><b>d.</b>12</li></ul>
+      <figure><svg id="f66" viewBox="0 0 600 410" role="img" aria-label="Three-set Venn diagram for German, French and Japanese, highlighting German and French but not Japanese with 11 students"></svg>
+        <div class="ctrl"><button class="play" type="button">Pause</button><input type="range" id="r66" min="0" max="1000" value="0" aria-label="Animation step for problem 66"><span class="hint">5 steps</span></div></figure>
+    </div>
+    <aside class="sol">
+      <h3>Solution</h3>
+      <div class="step"><span class="lbl">1 · German and French (any Japanese)</span>
+        <div class="eq"><math display="block"><mi>n</mi><mo>(</mo><mi>G</mi><mo>∩</mo><mi>F</mi><mo>)</mo><mo>=</mo><mi>n</mi><mo>(</mo><mi>G</mi><mo>)</mo><mo>−</mo><mi>n</mi><mo>(</mo><mi>G</mi><mo>∩</mo><msup><mi>F</mi><mo>′</mo></msup><mo>)</mo></math></div>
+        <div class="eq"><math display="block"><mi>n</mi><mo>(</mo><mi>G</mi><mo>∩</mo><mi>F</mi><mo>)</mo><mo>=</mo><mn>51</mn><mo>−</mo><mn>31</mn><mo>=</mo><mn>20</mn></math></div>
+      </div>
+      <div class="step"><span class="lbl">2 · Remove those who also take Japanese</span>
+        <div class="eq"><math display="block"><mi>n</mi><mo>(</mo><mi>G</mi><mo>∩</mo><mi>F</mi><mo>∩</mo><msup><mi>J</mi><mo>′</mo></msup><mo>)</mo><mo>=</mo><mi>n</mi><mo>(</mo><mi>G</mi><mo>∩</mo><mi>F</mi><mo>)</mo><mo>−</mo><mi>n</mi><mo>(</mo><mi>G</mi><mo>∩</mo><mi>F</mi><mo>∩</mo><mi>J</mi><mo>)</mo></math></div>
+        <div class="eq"><math display="block"><mi>n</mi><mo>(</mo><mi>G</mi><mo>∩</mo><mi>F</mi><mo>∩</mo><msup><mi>J</mi><mo>′</mo></msup><mo>)</mo><mo>=</mo><mn>20</mn><mo>−</mo><mn>9</mn><mo>=</mo><mn>11</mn></math></div>
+      </div>
+      <div class="step"><span class="lbl">Note</span>
+        <p>The total of 100 students is not needed. The 31 who take German but not French sit in the left part of circle G, outside F.</p>
+      </div>
+      <div class="ansbox">a. 11 students <small>G ∩ F ∩ J′</small></div>
+    </aside>
+  </section>
+
+  <!-- ============ 67 ============ -->
+  <section class="prob" id="p67">
+    <div class="left">
+      <div class="ph"><span class="num">67</span><h2>Freely falling body</h2><span class="tag">Arithmetic progression</span></div>
+      <p class="stmt">A freely falling body, starting from rest falls 16 ft during the first second, 48 ft during the second second, 80 ft during the third second, etc. Calculate the distance it falls during the fifteenth second.</p>
+      <ul class="choices"><li><b>a.</b>644 ft</li><li><b>b.</b>446 ft</li><li><b>c.</b>664 ft</li><li class="ok"><b>d.</b>464 ft</li></ul>
+      <figure><svg id="f67" viewBox="0 0 600 480" role="img" aria-label="Ball dropping on a 3600-foot scale with s equals 16 t squared, beside bars of distance fallen each second, from 16 ft up to 464 ft in the 15th second"></svg>
+        <div class="ctrl"><button class="play" type="button">Pause</button><input type="range" id="r67" min="0" max="1000" value="0" aria-label="Animation time for problem 67"><span class="hint">0.4 s = 1 s fall</span></div></figure>
+    </div>
+    <aside class="sol">
+      <h3>Solution</h3>
+      <div class="step"><span class="lbl">1 · 16, 48, 80, … is an AP</span>
+        <div class="eq"><math display="block"><msub><mi>a</mi><mn>1</mn></msub><mo>=</mo><mn>16</mn><mo>,</mo><mspace width="1em"/><mi>d</mi><mo>=</mo><mn>48</mn><mo>−</mo><mn>16</mn><mo>=</mo><mn>32</mn></math></div>
+      </div>
+      <div class="step"><span class="lbl">2 · nth term</span>
+        <div class="eq"><math display="block"><msub><mi>a</mi><mi>n</mi></msub><mo>=</mo><msub><mi>a</mi><mn>1</mn></msub><mo>+</mo><mo>(</mo><mi>n</mi><mo>−</mo><mn>1</mn><mo>)</mo><mi>d</mi></math></div>
+        <div class="eq"><math display="block"><msub><mi>a</mi><mn>15</mn></msub><mo>=</mo><mn>16</mn><mo>+</mo><mo>(</mo><mn>14</mn><mo>)</mo><mo>(</mo><mn>32</mn><mo>)</mo><mo>=</mo><mn>16</mn><mo>+</mo><mn>448</mn></math></div>
+        <div class="eq"><math display="block"><msub><mi>a</mi><mn>15</mn></msub><mo>=</mo><mn>464</mn><mtext>&nbsp;ft</mtext></math></div>
+      </div>
+      <div class="step"><span class="lbl">Check with s = 16t²</span>
+        <div class="eq"><math display="block"><msub><mi>s</mi><mn>15</mn></msub><mo>−</mo><msub><mi>s</mi><mn>14</mn></msub><mo>=</mo><mn>16</mn><mo>(</mo><msup><mn>15</mn><mn>2</mn></msup><mo>−</mo><msup><mn>14</mn><mn>2</mn></msup><mo>)</mo><mo>=</mo><mn>16</mn><mo>(</mo><mn>29</mn><mo>)</mo><mo>=</mo><mn>464</mn></math></div>
+        <p>3600 ft − 3136 ft = 464 ft, the bracket on the figure.</p>
+      </div>
+      <div class="ansbox">d. 464 ft <small>15th term</small></div>
+    </aside>
+  </section>
+
+  <!-- ============ 68 ============ -->
+  <section class="prob" id="p68">
+    <div class="left">
+      <div class="ph"><span class="num">68</span><h2>Gray squirrel population</h2><span class="tag">Exponential growth</span></div>
+      <p class="stmt">A gray squirrel population was introduced in a certain region 18 years ago. Biologists observe that the population doubles every six years, and now the population is 600. What was the initial squirrel population?</p>
+      <ul class="choices"><li><b>a.</b>300</li><li><b>b.</b>150</li><li><b>c.</b>37.5</li><li class="ok"><b>d.</b>75</li></ul>
+      <figure><svg id="f68" viewBox="0 0 600 350" role="img" aria-label="Exponential curve N equals 75 times 2 to the t over 6, passing through 75, 150, 300 and 600 at years 0, 6, 12 and 18"></svg>
+        <div class="ctrl"><button class="play" type="button">Pause</button><input type="range" id="r68" min="0" max="1000" value="0" aria-label="Animation time for problem 68"><span class="hint">1 s = 4 years</span></div></figure>
+    </div>
+    <aside class="sol">
+      <h3>Solution</h3>
+      <div class="step"><span class="lbl">1 · Doubling model (T = 6 yr)</span>
+        <div class="eq"><math display="block"><mi>N</mi><mo>=</mo><msub><mi>N</mi><mn>0</mn></msub><mo>·</mo><msup><mn>2</mn><mrow><mi>t</mi><mo>/</mo><mn>6</mn></mrow></msup></math></div>
+      </div>
+      <div class="step"><span class="lbl">2 · Now: t = 18 yr, N = 600</span>
+        <div class="eq"><math display="block"><mn>600</mn><mo>=</mo><msub><mi>N</mi><mn>0</mn></msub><mo>·</mo><msup><mn>2</mn><mrow><mn>18</mn><mo>/</mo><mn>6</mn></mrow></msup><mo>=</mo><msub><mi>N</mi><mn>0</mn></msub><mo>·</mo><msup><mn>2</mn><mn>3</mn></msup><mo>=</mo><mn>8</mn><msub><mi>N</mi><mn>0</mn></msub></math></div>
+        <div class="eq"><math display="block"><msub><mi>N</mi><mn>0</mn></msub><mo>=</mo><mfrac><mn>600</mn><mn>8</mn></mfrac><mo>=</mo><mn>75</mn></math></div>
+      </div>
+      <div class="step"><span class="lbl">Check</span>
+        <p>75 → 150 → 300 → 600 after 6, 12 and 18 years.</p>
+      </div>
+      <div class="ansbox">d. 75 squirrels <small>N₀</small></div>
+    </aside>
+  </section>
+</div>
+
+<script>
+(function(){
+const NS='http://www.w3.org/2000/svg';
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in (attrs||{}))e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e;}
+function txt(parent,x,y,s,cls,anchor){const t=el('text',{x:x,y:y,class:cls||'tick','text-anchor':anchor||'middle'},parent);t.textContent=s;return t;}
+function set(e,attrs){for(const k in attrs)e.setAttribute(k,attrs[k]);}
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const ease=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+const show=(e,on)=>e.setAttribute('opacity',on===true?1:on===false?0:on);
+let reduce=false;try{reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){}
+
+/* ---------- 64: meeting point ---------- */
+function fig64(svg){
+  const D=225,x0=40,x1=560,sx=(x1-x0)/D,X=m=>x0+m*sx;
+  const yAx=262;
+  el('line',{x1:x0,y1:yAx,x2:x1,y2:yAx,class:'axis'},svg);
+  for(let m=0;m<=D;m+=25){el('line',{x1:X(m),y1:yAx,x2:X(m),y2:yAx+6,class:'axis'},svg);txt(svg,X(m),yAx+20,m);}
+  txt(svg,x0,yAx-8,'distance from M (mi)','tick','start');
+  const clock=txt(svg,x1,22,'','big','end');
+  const tracks=[
+    {y:92,vy:20,meetM:135,label:'Original: X 30 mph, Y 20 mph',P:'P'},
+    {y:186,vy:24,meetM:125,label:'Y 20% faster: X 30 mph, Y 24 mph',P:'P′'}
+  ];
+  tracks.forEach(T=>{
+    T.tm=D/(30+T.vy);
+    txt(svg,x0,T.y-38,T.label,'cap','start');
+    T.done=txt(svg,x1,T.y-38,'','cap tg','end');
+    el('line',{x1:x0,y1:T.y,x2:x1,y2:T.y,class:'track'},svg);
+    T.drop=el('line',{x1:X(T.meetM),y1:T.y+12,x2:X(T.meetM),y2:yAx,class:'sm dash','stroke-width':1},svg);
+    T.trX=el('line',{x1:x0,y1:T.y,x2:x0,y2:T.y,class:'sx','stroke-width':4,'stroke-linecap':'round'},svg);
+    T.trY=el('line',{x1:x1,y1:T.y,x2:x1,y2:T.y,class:'sy','stroke-width':4,'stroke-linecap':'round'},svg);
+    [[x0,'M'],[x1,'N']].forEach(([x,n])=>{el('circle',{cx:x,cy:T.y,r:4,class:'fg'},svg);txt(svg,x,T.y+28,n,'big');});
+    T.dX=txt(svg,0,T.y-18,'','cap tx');T.dY=txt(svg,0,T.y-18,'','cap ty');
+    T.pl=txt(svg,X(T.meetM),T.y-20,T.P,'big ta');
+    T.gX=el('g',{},svg);el('circle',{r:12,class:'fx'},T.gX);txt(T.gX,0,4,'X','white');
+    T.gY=el('g',{},svg);el('circle',{r:12,class:'fy'},T.gY);txt(T.gY,0,4,'Y','white');
+  });
+  const br=el('g',{},svg),by=232;
+  el('path',{d:`M${X(125)} ${by-5}V${by}H${X(135)}V${by-5}`,class:'sa','stroke-width':1.6,fill:'none'},br);
+  txt(br,X(135)+8,by+1,'10 mi','cap ta','start');
+  return function(t){ // t in hours
+    clock.textContent='t = '+t.toFixed(2)+' h';
+    tracks.forEach(T=>{
+      const h=Math.min(t,T.tm),mx=30*h,my=T.vy*h,met=t>=T.tm-1e-9;
+      set(T.trX,{x2:X(mx)});set(T.trY,{x1:X(D-my)});
+      T.gX.setAttribute('transform',`translate(${X(mx)},${T.y})`);
+      T.gY.setAttribute('transform',`translate(${X(D-my)},${T.y})`);
+      set(T.dX,{x:X(mx/2)});T.dX.textContent=Math.round(mx)+' mi';show(T.dX,mx>28);
+      set(T.dY,{x:X(D-my/2)});T.dY.textContent=Math.round(my)+' mi';show(T.dY,my>28);
+      show(T.pl,met);show(T.drop,met);
+      T.done.textContent=met?'meet at t = '+T.tm.toFixed(2)+' h':'';
+    });
+    show(br,t>=tracks[0].tm-1e-9);
+  };
+}
+
+/* ---------- 65: grass sawtooth ---------- */
+function fig65(svg){
+  const h0=(1+1.02+1.02*1.02)/Math.pow(1.02,3);
+  const L=60,R=420,gY=290,top=40,sx=(R-L)/3,sy=(gY-top)/3.2;
+  const X=d=>L+d*sx,Y=h=>gY-h*sy;
+  for(let v=0;v<=3.0001;v+=0.5){el('line',{x1:L,y1:Y(v),x2:R,y2:Y(v),class:'gridl'},svg);txt(svg,L-8,Y(v)+4,v.toFixed(1),'tick','end');}
+  for(let d=0;d<=3;d++){el('line',{x1:X(d),y1:top,x2:X(d),y2:gY,class:'gridl'},svg);txt(svg,X(d),gY+20,'day '+d);}
+  el('path',{d:`M${L} ${top}V${gY}H${R}`,class:'axis'},svg);
+  txt(svg,L-44,24,'grass height (mm)','tick','start');
+  // grass column, same vertical scale
+  const bx=465,bw=70;
+  el('line',{x1:445,y1:gY,x2:560,y2:gY,class:'axis'},svg);
+  txt(svg,bx+bw/2,gY+20,'lawn');
+  const bar=el('rect',{x:bx,width:bw,class:'fg','fill-opacity':.85},svg);
+  const blades=el('path',{class:'fg'},svg);
+  const guide=el('line',{class:'sm dash','stroke-width':1},svg);
+  const bval=txt(svg,bx+bw/2,0,'','cap');
+  const phase=txt(svg,bx+bw/2,top-12,'','cap ta');
+  const path=el('path',{class:'sg',fill:'none','stroke-width':2.5,'stroke-linejoin':'round'},svg);
+  const dot=el('circle',{r:5,class:'fa'},svg);
+  // event labels
+  const ev=[];let h=h0;
+  for(let k=0;k<3;k++){const pk=h*1.02,lo=pk-1;
+    const a=txt(svg,X(k+1)-6,Y(pk)-9,pk.toFixed(3),'tick','end');
+    const b=txt(svg,X(k+1)+7,Y(lo)+(lo<0.05?-6:17),Math.abs(lo).toFixed(3),'tick','start');
+    ev.push({a,b,k});h=lo;}
+  const start=txt(svg,X(0)+8,Y(h0)+22,'h = '+h0.toFixed(3)+' mm','cap ta','start');
+  const DAY=1.8,GROW=1.2;
+  return function(t){
+    let pts=[[X(0),Y(h0)]],h=h0,cur=h0,ph='',px=X(0);
+    for(let k=0;k<3;k++){
+      const tk=t-k*DAY;if(tk<=0)break;
+      const g=Math.min(tk/GROW,1);
+      for(let i=1;i<=16;i++){const s=g*i/16;pts.push([X(k+s),Y(h*Math.pow(1.02,s))]);}
+      cur=h*Math.pow(1.02,g);px=X(k+g);ph=g<1?'× 1.02':'';
+      if(tk>GROW){const c=ease(Math.min((tk-GROW)/(DAY-GROW),1));cur=h*1.02-c;pts.push([X(k+1),Y(cur)]);ph=c<1?'− 1 mm':'';}
+      ev[k].a.setAttribute('opacity',tk>=GROW?1:0);ev[k].b.setAttribute('opacity',tk>=DAY?1:0);
+      if(tk>=DAY)h=h*1.02-1;
+    }
+    for(let k=0;k<3;k++)if(t-k*DAY<=0){show(ev[k].a,false);show(ev[k].b,false);}
+    cur=Math.max(cur,0);
+    path.setAttribute('d','M'+pts.map(p=>p[0].toFixed(2)+' '+p[1].toFixed(2)).join('L'));
+    const last=pts[pts.length-1];set(dot,{cx:last[0],cy:last[1]});
+    const yt=Y(cur);set(bar,{y:yt,height:gY-yt});
+    let d='';for(let i=0;i<5;i++){const x=bx+i*bw/5;d+=`M${x} ${yt}L${x+bw/10} ${yt-Math.min(8,(gY-yt))}L${x+bw/5} ${yt}Z`;}
+    blades.setAttribute('d',cur>0.02?d:'');
+    set(guide,{x1:last[0]+6,y1:yt,x2:bx-4,y2:yt});show(guide,cur>0.02);
+    set(bval,{y:yt-14});bval.textContent=cur.toFixed(3)+' mm';
+    phase.textContent=ph;
+  };
+}
+
+/* ---------- 66: Venn ---------- */
+function fig66(svg){
+  const G={cx:240,cy:150},F={cx:360,cy:150},J={cx:300,cy:248},r=100;
+  const defs=el('defs',{},svg);
+  const cp=(id,c)=>{const p=el('clipPath',{id:id},defs);el('circle',{cx:c.cx,cy:c.cy,r:r},p);};
+  cp('v-cG',G);cp('v-cF',F);cp('v-cJ',J);
+  const mk=(id,c)=>{const m=el('mask',{id:id,maskUnits:'userSpaceOnUse',x:0,y:0,width:600,height:410},defs);el('rect',{x:0,y:0,width:600,height:410,fill:'#fff'},m);el('circle',{cx:c.cx,cy:c.cy,r:r,fill:'#000'},m);};
+  mk('v-nF',F);mk('v-nJ',J);
+  el('rect',{x:20,y:20,width:560,height:345,rx:4,class:'axis','stroke-width':1}, svg);
+  txt(svg,32,40,'U = 100 students','tick','start');
+  const ov=[];const hl=(cls)=>{const g=el('g',{opacity:0},svg);ov.push(g);return g;};
+  // 0: all of G
+  el('circle',{cx:G.cx,cy:G.cy,r:r,class:'fx','fill-opacity':.28},hl());
+  // 1: G minus F
+  el('circle',{cx:G.cx,cy:G.cy,r:r,class:'fx','fill-opacity':.32,mask:'url(#v-nF)'},hl());
+  // 2: G ∩ F
+  el('circle',{cx:F.cx,cy:F.cy,r:r,class:'fg','fill-opacity':.32,'clip-path':'url(#v-cG)'},hl());
+  // 3: G ∩ F ∩ J
+  {const g=el('g',{'clip-path':'url(#v-cG)'},hl());el('circle',{cx:F.cx,cy:F.cy,r:r,class:'fy','fill-opacity':.38,'clip-path':'url(#v-cJ)'},g);}
+  // 4: G ∩ F ∩ J'
+  {const g=el('g',{'clip-path':'url(#v-cG)',mask:'url(#v-nJ)'},hl());el('circle',{cx:F.cx,cy:F.cy,r:r,class:'fa','fill-opacity':.45},g);}
+  [[G,'sx'],[F,'sg'],[J,'sy']].forEach(([c,s])=>el('circle',{cx:c.cx,cy:c.cy,r:r,class:s,fill:'none','stroke-width':2},svg));
+  txt(svg,158,66,'German (51)','cap tx','end');
+  txt(svg,442,66,'French','cap tg','start');
+  txt(svg,392,342,'Japanese','cap ty','start');
+  const n31=txt(svg,192,138,'31','big tx'),n20=txt(svg,300,104,'20','big tg'),n9=txt(svg,300,196,'9','big ty'),n11=txt(svg,300,110,'11','big ta');
+  [n31,n20,n9,n11].forEach(n=>n.style.fontSize='22px');
+  const cap=txt(svg,300,394,'','big');
+  const steps=['n(G) = 51: every German student','German but not French: n(G ∩ F′) = 31','German and French: 51 − 31 = 20','All three languages: n(G ∩ F ∩ J) = 9','German and French, not Japanese: 20 − 9 = 11'];
+  const STEP=1.7;
+  return function(t){
+    const s=Math.min(Math.floor(t/STEP),4),f=clamp((t-s*STEP)/0.5,0,1);
+    ov.forEach((g,i)=>show(g,i===s?f:0));
+    show(n31,s>=1?(s===1?f:1):0);
+    show(n20,s===2||s===3?(s===2?f:1):0);
+    show(n9,s>=3?(s===3?f:1):0);
+    show(n11,s>=4?f:0);
+    cap.textContent=steps[s];
+    cap.setAttribute('class',s===4?'big ta':'big');
+  };
+}
+
+/* ---------- 67: free fall ---------- */
+function fig67(svg){
+  const ax=100,T0=40,B=440,k=(B-T0)/3600,Ys=s=>T0+s*k;
+  el('line',{x1:ax,y1:T0,x2:ax,y2:B,class:'axis'},svg);
+  for(let s=0;s<=3000;s+=500){el('line',{x1:ax-5,y1:Ys(s),x2:ax,y2:Ys(s),class:'axis'},svg);txt(svg,ax-9,Ys(s)+4,s,'tick','end');}
+  el('line',{x1:ax-5,y1:B,x2:ax,y2:B,class:'axis'},svg);txt(svg,ax-9,B+4,'3600','tick','end');
+  txt(svg,ax,24,'s = 16t² (ft)','cap');
+  for(let n=1;n<=15;n++)el('line',{x1:ax,y1:Ys(16*n*n),x2:ax+8,y2:Ys(16*n*n),class:'sm','stroke-width':1},svg);
+  // bracket 14→15
+  const br=el('g',{},svg),bx=146;
+  el('path',{d:`M${bx-5} ${Ys(3136)}H${bx}V${B}H${bx-5}`,class:'sa',fill:'none','stroke-width':1.8},br);
+  txt(br,bx+7,Ys(3136)+4,'t=14 s · 3136','tick','start');
+  txt(br,bx+7,B+4,'t=15 s · 3600','tick','start');
+  txt(br,bx+7,(Ys(3136)+B)/2+5,'464 ft','big ta','start');
+  const rt=txt(svg,150,70,'','cap','start'),rs=txt(svg,150,90,'','cap','start');
+  const ball=el('circle',{cx:122,r:7,class:'fa'},svg);
+  // bar chart: distance per second
+  const L=260,R=580,cb=B,ctop=140,cs=(cb-ctop)/500,slot=(R-L)/15;
+  for(let v=0;v<=500;v+=100){el('line',{x1:L,y1:cb-v*cs,x2:R,y2:cb-v*cs,class:'gridl'},svg);txt(svg,L-6,cb-v*cs+4,v,'tick','end');}
+  el('path',{d:`M${L} ${ctop}V${cb}H${R}`,class:'axis'},svg);
+  txt(svg,L,116,'distance in each second (ft)','cap','start');
+  const bars=[];
+  for(let n=1;n<=15;n++){
+    const cx=L+(n-.5)*slot,full=32*n-16;
+    const b=el('rect',{x:cx-7,width:14,class:n===15?'fa':'fx','fill-opacity':n===15?1:.75},svg);
+    txt(svg,cx,cb+16,n,'tick');
+    let lab=null;if(n<=3||n===15)lab=txt(svg,cx,cb-full*cs-6,full,n===15?'cap ta':'tick');
+    bars.push({b,full,n,lab});
+  }
+  txt(svg,R,cb+32,'second n','tick','end');
+  return function(a){
+    const t=a*2.5,s=16*t*t;
+    set(ball,{cy:Ys(s)});
+    rt.textContent='t = '+t.toFixed(1)+' s';rs.textContent='s = '+Math.round(s)+' ft';
+    bars.forEach(o=>{const f=clamp((s-16*(o.n-1)*(o.n-1))/o.full,0,1);const hgt=o.full*cs*f;set(o.b,{y:cb-hgt,height:hgt});if(o.lab)show(o.lab,f>=1);});
+    show(br,t>=14?clamp(t-14,0.25,1):0);
+  };
+}
+
+/* ---------- 68: doubling ---------- */
+function fig68(svg){
+  const L=70,R=550,B=300,T=40,X=y=>L+y*(R-L)/18,Y=n=>B-n*(B-T)/650,N=y=>75*Math.pow(2,y/6);
+  for(let v=0;v<=600;v+=100){el('line',{x1:L,y1:Y(v),x2:R,y2:Y(v),class:'gridl'},svg);txt(svg,L-8,Y(v)+4,v,'tick','end');}
+  for(let y=0;y<=18;y+=3){el('line',{x1:X(y),y1:T,x2:X(y),y2:B,class:y%6===0?'sm dash':'gridl','stroke-width':1},svg);txt(svg,X(y),B+18,y);}
+  el('path',{d:`M${L} ${T}V${B}H${R}`,class:'axis'},svg);
+  txt(svg,R,B+38,'years since introduction','tick','end');
+  txt(svg,L-44,24,'squirrels','tick','start');
+  const rd=txt(svg,L+12,T+16,'','cap','start');
+  const path=el('path',{class:'sg',fill:'none','stroke-width':2.5},svg);
+  const pts=[[0,'N₀ = 75','ta',10,-12,'start'],[6,'150','tg',-8,-10,'end'],[12,'300','tg',-8,-10,'end'],[18,'600 now','tg',-10,-12,'end']].map(([y,l,c,dx,dy,an])=>{
+    const g=el('g',{opacity:0},svg);el('circle',{cx:X(y),cy:Y(N(y)),r:y===0?7:5,class:y===0?'fa':'fg'},g);txt(g,X(y)+dx,Y(N(y))+dy,l,'big '+c,an);return{y,g};});
+  const x2=[3,9,15].map(y=>{const t=txt(svg,X(y)-12,Y(N(y))-14,'× 2','cap ta','end');return{y:y+3,t};});
+  return function(a){
+    const yr=Math.min(a*4,18);let d='';
+    for(let i=0;i<=60;i++){const y=yr*i/60;d+=(i?'L':'M')+X(y).toFixed(2)+' '+Y(N(y)).toFixed(2);}
+    path.setAttribute('d',d);
+    rd.textContent='t = '+yr.toFixed(1)+' yr, N = '+Math.round(N(yr));
+    pts.forEach(p=>show(p.g,yr>=p.y-1e-9));
+    x2.forEach(p=>show(p.t,yr>=p.y-1e-9));
+  };
+}
+
+/* ---------- controller ---------- */
+const figs=[];
+function mount(id,build,dur,hold){
+  const svg=document.getElementById(id),fig=svg.closest('figure');
+  const f={render:build(svg),dur:dur,hold:hold,t:reduce?dur:0,playing:!reduce,visible:true,
+    btn:fig.querySelector('.play'),range:fig.querySelector('input[type=range]')};
+  const sync=()=>{f.btn.textContent=f.playing?'Pause':(f.t>=f.dur?'Replay':'Play');};
+  f.update=()=>{const tt=Math.min(f.t,f.dur);f.render(tt);f.range.value=Math.round(tt/f.dur*1000);};
+  f.btn.addEventListener('click',()=>{if(!f.playing&&f.t>=f.dur)f.t=0;f.playing=!f.playing;sync();f.update();});
+  f.range.addEventListener('input',()=>{f.playing=false;f.t=f.range.value/1000*f.dur;sync();f.update();});
+  f.sync=sync;sync();f.update();
+  try{new IntersectionObserver(es=>es.forEach(e=>f.visible=e.isIntersecting)).observe(svg);}catch(e){}
+  figs.push(f);
+}
+mount('f64',fig64,4.5,2.5);
+mount('f65',fig65,5.4,2.5);
+mount('f66',fig66,8.5,3);
+mount('f67',fig67,6,3);
+mount('f68',fig68,4.5,3);
+
+let last=performance.now();
+function tick(now){
+  const dt=Math.min(.1,(now-last)/1000);last=now;
+  for(const f of figs){if(!f.playing||!f.visible)continue;f.t+=dt;if(f.t>f.dur+f.hold)f.t=0;f.update();}
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+})();
+</script>
+</body></html>
