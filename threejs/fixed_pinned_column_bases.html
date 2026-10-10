@@ -1,0 +1,1364 @@
+<!doctype html>
+<html lang="tl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>body{margin:0}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Fixed &amp; Pinned Column Bases</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    /* Layout: full-bleed 3D site view; control card top-left, detail sheet on the right (collapsible bottom sheet on phones) */
+    --bg: #c6d0d7;
+    --ink: #1a1e21;
+    --ink-2: #4a5258;
+    --ink-3: #687177;
+    --sheet: rgba(243, 244, 241, 0.9);
+    --sheet-solid: #f3f4f1;
+    --line: rgba(26, 30, 33, 0.14);
+    --hivis: #f2c230;
+    --hivis-ink: #1a1e21;
+    --accent: #8f6200;
+    --tag-bg: rgba(248, 248, 245, 0.95);
+    --tag-line: rgba(26, 30, 33, 0.72);
+    --tag-ring: #1a1e21;
+    --display: "Barlow Condensed", "Arial Narrow", Arial, sans-serif;
+    --body: "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #111416; --ink: #e8ebea; --ink-2: #a9b1b5; --ink-3: #848d92;
+      --sheet: rgba(19, 22, 25, 0.86); --sheet-solid: #131619; --line: rgba(232, 235, 234, 0.14);
+      --accent: #f2c230; --tag-bg: rgba(19, 22, 25, 0.92); --tag-line: rgba(232, 235, 234, 0.78); --tag-ring: #0c0e0f;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #111416; --ink: #e8ebea; --ink-2: #a9b1b5; --ink-3: #848d92;
+    --sheet: rgba(19, 22, 25, 0.86); --sheet-solid: #131619; --line: rgba(232, 235, 234, 0.14);
+    --accent: #f2c230; --tag-bg: rgba(19, 22, 25, 0.92); --tag-line: rgba(232, 235, 234, 0.78); --tag-ring: #0c0e0f;
+    color-scheme: dark;
+  }
+  html, body { height: 100%; }
+  body { background: var(--bg); color: var(--ink); font-family: var(--body); overflow: hidden; }
+  #app { position: relative; height: 100%; }
+  #stage { position: absolute; inset: 0; z-index: 0; } /* own stacking context: CSS2D labels carry z-indexes */
+  .hud, .panel { z-index: 1; }
+  #stage canvas { display: block; touch-action: none; }
+  .labels { position: absolute; inset: 0; pointer-events: none; }
+
+  .card {
+    background: var(--sheet);
+    -webkit-backdrop-filter: blur(12px) saturate(1.15);
+    backdrop-filter: blur(12px) saturate(1.15);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: 0 6px 24px rgba(10, 14, 18, 0.12);
+  }
+  .eyebrow {
+    margin: 0; font-family: var(--display); font-weight: 600; font-size: 12px;
+    text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-3);
+  }
+
+  /* control card */
+  .hud {
+    position: absolute; top: 16px; left: 16px;
+    width: 336px; max-width: calc(100% - 32px);
+    padding: 14px 16px 14px; display: grid; gap: 12px;
+  }
+  .hud h1 {
+    margin: 2px 0 0; font-family: var(--display); font-weight: 700; font-size: 27px;
+    line-height: 1.02; letter-spacing: 0.005em; text-wrap: balance;
+  }
+  .ctrls { display: grid; grid-template-columns: auto 1fr; gap: 8px 12px; align-items: center; }
+  .seg { display: contents; }
+  .toggles { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+  .seg-label {
+    font-family: var(--display); font-weight: 600; font-size: 11px; color: var(--ink-3);
+    text-transform: uppercase; letter-spacing: 0.1em;
+  }
+  .seg-btns { display: inline-flex; justify-self: start; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; }
+  .seg-btns button, .btn {
+    appearance: none; border: 0; background: transparent; color: var(--ink); cursor: pointer;
+    font: 600 13px/1 var(--display); letter-spacing: 0.05em; text-transform: uppercase;
+    padding: 8px 10px;
+  }
+  .seg-btns button + button { border-left: 1px solid var(--line); }
+  .seg-btns button:hover, .btn:hover { background: rgba(127, 127, 127, 0.12); }
+  .seg-btns button[aria-pressed="true"] { background: var(--hivis); color: var(--hivis-ink); }
+  .btn { border: 1px solid var(--line); border-radius: 7px; }
+  .btn[aria-pressed="true"] { background: var(--hivis); color: var(--hivis-ink); border-color: transparent; }
+  .chk {
+    display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+    font: 600 13px/1 var(--display); letter-spacing: 0.05em; text-transform: uppercase;
+  }
+  .chk input { width: 15px; height: 15px; margin: 0; accent-color: var(--hivis); }
+  button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .hint { margin: 0; font-size: 12px; color: var(--ink-3); }
+
+  /* detail sheet */
+  .panel {
+    position: absolute; top: 16px; right: 16px; bottom: 16px; width: 372px;
+    overflow: auto; padding: 18px 20px 20px; overscroll-behavior: contain;
+  }
+  .panel-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+  .panel h2 {
+    margin: 4px 0 0; font-family: var(--display); font-weight: 700; font-size: 32px;
+    line-height: 1; text-wrap: balance;
+  }
+  .panel-toggle { display: none; }
+  .panel-body { display: grid; gap: 0; }
+  .lede { margin: 12px 0 16px; font-size: 15px; line-height: 1.5; }
+  .panel h3 {
+    margin: 20px 0 9px; font-family: var(--display); font-weight: 600; font-size: 12px;
+    text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-3);
+  }
+  .restraint {
+    display: grid; grid-template-columns: 104px 1fr; gap: 14px; align-items: center;
+    padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px;
+  }
+  .sym { width: 104px; height: 78px; color: var(--ink); display: block; }
+  .dof { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+  .dof li {
+    font-family: var(--mono); font-size: 12px; padding: 4px 7px; border-radius: 5px;
+    border: 1px solid var(--ink); font-variant-numeric: tabular-nums;
+  }
+  .dof li.fix { background: var(--ink); color: var(--sheet-solid); }
+  .dof li.free { border-style: dashed; border-color: var(--accent); color: var(--accent); }
+  .reac { margin: 8px 0 0; font-size: 13px; color: var(--ink-2); line-height: 1.4; }
+  .testnote {
+    margin: 12px 0 0; padding: 10px 12px; border-radius: 8px; font-size: 13.5px; line-height: 1.45;
+    background: rgba(242, 194, 48, 0.16); border: 1px solid rgba(242, 194, 48, 0.55);
+  }
+  .notes { margin: 0; padding-left: 18px; display: grid; gap: 7px; font-size: 14px; line-height: 1.45; }
+  .notes li::marker { color: var(--accent); }
+  .specs { display: grid; grid-template-columns: auto 1fr; gap: 7px 14px; margin: 0; font-size: 13.5px; }
+  .specs dt { color: var(--ink-2); }
+  .specs dd {
+    margin: 0; text-align: right; font-family: var(--mono); font-size: 12.5px;
+    font-variant-numeric: tabular-nums; min-width: 0;
+  }
+  .fine { margin: 18px 0 0; font-size: 12px; line-height: 1.45; color: var(--ink-3); }
+
+  /* 3D callouts */
+  .tag { position: absolute; width: 0; height: 0; font-family: var(--body); }
+  .tag-dot {
+    position: absolute; left: -4px; top: -4px; width: 8px; height: 8px; border-radius: 50%;
+    background: var(--hivis); box-shadow: 0 0 0 1.5px var(--tag-ring);
+  }
+  .tag-lead { position: absolute; left: 0; top: 0; height: 1px; background: var(--tag-line); transform-origin: 0 0; }
+  .tag-pill {
+    position: absolute; transform: translate(0, -50%); white-space: nowrap;
+    background: var(--tag-bg); color: var(--ink); border: 1px solid var(--line); border-radius: 6px;
+    padding: 4px 8px 5px; font-size: 12px; line-height: 1.25; font-weight: 600;
+    box-shadow: 0 2px 8px rgba(10, 14, 18, 0.14);
+  }
+  .tag-pill small { display: block; font-size: 11px; font-weight: 400; color: var(--ink-2); }
+  .tag-l .tag-pill { transform: translate(-100%, -50%); }
+
+  #loading {
+    position: absolute; inset: 0; z-index: 5; display: grid; place-items: center;
+    background: var(--bg); transition: opacity 0.6s ease;
+  }
+  #loading.done { opacity: 0; pointer-events: none; }
+  #loading p { margin: 0; font-family: var(--display); font-weight: 600; font-size: 18px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-2); }
+
+  @media (max-width: 820px) {
+    .hud { right: 16px; width: auto; max-width: none; padding: 12px 14px; gap: 10px; }
+    .hud .eyebrow, .hud .hint, .hud .seg-label { display: none; }
+    .hud h1 { font-size: 21px; }
+    .ctrls { display: flex; flex-wrap: wrap; gap: 8px; }
+    .seg { display: flex; }
+    .toggles { gap: 8px 12px; }
+    .seg-btns button, .btn { padding: 7px 8px; font-size: 12px; }
+    .panel { top: auto; left: 16px; right: 16px; width: auto; max-height: 46%; padding: 14px 16px; }
+    .panel h2 { font-size: 24px; }
+    .panel-toggle { display: inline-flex; }
+    .panel.collapsed .panel-body { display: none; }
+    .tag-pill { font-size: 11px; padding: 3px 6px 4px; }
+    .tag-pill small { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #loading { transition: none; }
+  }
+</style>
+
+<div id="app">
+  <div id="stage" aria-label="3D view of the column base. Drag to orbit, scroll or pinch to zoom."></div>
+
+  <header class="hud card">
+    <div>
+      <p class="eyebrow">Foundation support · 3D site model</p>
+      <h1>Fixed &amp; Pinned Column Bases</h1>
+    </div>
+    <div class="ctrls">
+      <div class="seg">
+        <span class="seg-label" id="lbl-type">Column</span>
+        <div class="seg-btns" data-key="type" role="group" aria-labelledby="lbl-type">
+          <button type="button" id="b-rc" data-v="rc">Concrete</button>
+          <button type="button" id="b-steel" data-v="steel">Steel</button>
+        </div>
+      </div>
+      <div class="seg">
+        <span class="seg-label" id="lbl-sup">Support</span>
+        <div class="seg-btns" data-key="support" role="group" aria-labelledby="lbl-sup">
+          <button type="button" id="b-fixed" data-v="fixed">Fixed</button>
+          <button type="button" id="b-pinned" data-v="pinned">Pinned</button>
+        </div>
+      </div>
+      <div class="seg">
+        <span class="seg-label" id="lbl-view">View</span>
+        <div class="seg-btns" data-key="view" role="group" aria-labelledby="lbl-view">
+          <button type="button" id="b-solid" data-v="solid">Solid</button>
+          <button type="button" id="b-cut" data-v="cut">Cutaway</button>
+          <button type="button" id="b-xray" data-v="xray">X-ray</button>
+        </div>
+      </div>
+      <div class="seg">
+        <span class="seg-label" id="lbl-cam">Camera</span>
+        <div class="seg-btns" id="cams" role="group" aria-labelledby="lbl-cam">
+          <button type="button" id="c-overview" data-cam="overview">Overview</button>
+          <button type="button" id="c-base" data-cam="base">Base</button>
+          <button type="button" id="c-footing" data-cam="footing">Footing</button>
+        </div>
+      </div>
+      <div class="seg">
+        <span class="seg-label">Show</span>
+        <div class="toggles">
+          <label class="chk" for="soil"><input type="checkbox" id="soil" checked> Lupa</label>
+          <label class="chk" for="labels"><input type="checkbox" id="labels" checked> Labels</label>
+          <button type="button" class="btn" id="test" aria-pressed="false">Rotation test</button>
+        </div>
+      </div>
+    </div>
+    <p class="hint">I-drag para umikot · scroll o pinch para mag-zoom · right-drag o two-finger drag para mag-pan</p>
+  </header>
+
+  <aside class="panel card" id="panel" aria-live="polite">
+    <div class="panel-head">
+      <div>
+        <p class="eyebrow" id="p-eyebrow">Detail</p>
+        <h2 id="p-title">Loading</h2>
+      </div>
+      <button type="button" class="btn panel-toggle" id="p-toggle" aria-expanded="true" aria-controls="p-body">Details</button>
+    </div>
+    <div class="panel-body" id="p-body"></div>
+  </aside>
+
+  <div id="loading"><p id="loading-msg">Inihahanda ang site…</p></div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { Sky } from 'three/addons/objects/Sky.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+
+const V3 = THREE.Vector3;
+const $ = (s) => document.querySelector(s);
+const setMsg = (t) => { $('#loading-msg').textContent = t; };
+const nextFrame = () => new Promise((r) => requestAnimationFrame(() => setTimeout(r, 0)));
+const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+const mix = (a, b, t) => a + (b - a) * t;
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ------------------------------------------------------------------ */
+/* Procedural noise (tileable)                                        */
+/* ------------------------------------------------------------------ */
+function mulberry32(a) {
+  return function () {
+    a |= 0; a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function makePerlin(seed) {
+  const rnd = mulberry32(seed);
+  const p = new Uint8Array(256);
+  for (let i = 0; i < 256; i++) p[i] = i;
+  for (let i = 255; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); const t = p[i]; p[i] = p[j]; p[j] = t; }
+  const perm = new Uint8Array(512);
+  for (let i = 0; i < 512; i++) perm[i] = p[i & 255];
+  const gx = new Float32Array(256), gy = new Float32Array(256);
+  for (let i = 0; i < 256; i++) { const a = rnd() * Math.PI * 2; gx[i] = Math.cos(a); gy[i] = Math.sin(a); }
+  return (x, y, px, py) => {
+    const xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi;
+    const x0 = ((xi % px) + px) % px, y0 = ((yi % py) + py) % py;
+    const x1 = (x0 + 1) % px, y1 = (y0 + 1) % py;
+    const a = perm[perm[x0] + y0], b = perm[perm[x1] + y0], c = perm[perm[x0] + y1], d = perm[perm[x1] + y1];
+    const n00 = gx[a] * xf + gy[a] * yf, n10 = gx[b] * (xf - 1) + gy[b] * yf;
+    const n01 = gx[c] * xf + gy[c] * (yf - 1), n11 = gx[d] * (xf - 1) + gy[d] * (yf - 1);
+    const u = xf * xf * xf * (xf * (xf * 6 - 15) + 10), v = yf * yf * yf * (yf * (yf * 6 - 15) + 10);
+    const top = n00 + (n10 - n00) * u, bot = n01 + (n11 - n01) * u;
+    return (top + (bot - top) * v) * 1.4;
+  };
+}
+function fbm(n, u, v, px, py, oct) {
+  let s = 0, a = 1, t = 0;
+  for (let o = 0; o < oct; o++) { s += a * n(u * px, v * py, px, py); t += a; a *= 0.5; px *= 2; py *= 2; }
+  return s / t;
+}
+
+/* ------------------------------------------------------------------ */
+/* Renderer, scene, camera                                            */
+/* ------------------------------------------------------------------ */
+const stage = $('#stage');
+let renderer;
+try {
+  renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+} catch (e) {
+  setMsg('Walang WebGL sa browser na ito, kaya hindi ma-render ang 3D view.');
+  throw e;
+}
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 0.62;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+stage.appendChild(renderer.domElement);
+const maxAniso = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+
+const labelRenderer = new CSS2DRenderer();
+labelRenderer.domElement.className = 'labels';
+stage.appendChild(labelRenderer.domElement);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(36, 1, 0.03, 1000);
+camera.position.set(4.35, 1.75, 4.95);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.minDistance = 0.35;
+controls.maxDistance = 14;
+controls.maxPolarAngle = Math.PI * 0.56;
+controls.target.set(0, -0.45, 0);
+
+/* ------------------------------------------------------------------ */
+/* Texture helpers                                                    */
+/* ------------------------------------------------------------------ */
+function rgbaCanvas(w, h, data) {
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  c.getContext('2d').putImageData(new ImageData(data, w, h), 0, 0);
+  return c;
+}
+function canvasTex(canvas, srgb) {
+  const t = new THREE.CanvasTexture(canvas);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.colorSpace = srgb ? THREE.SRGBColorSpace : THREE.NoColorSpace;
+  t.anisotropy = maxAniso;
+  return t;
+}
+// tangent-space normal map from a wrapped height field (canvas rows run down, uv.v runs up)
+function normalFromHeight(H, w, h, k) {
+  const out = new Uint8ClampedArray(w * h * 4);
+  for (let y = 0; y < h; y++) {
+    const ym = ((y - 1 + h) % h) * w, yp = ((y + 1) % h) * w, yr = y * w;
+    for (let x = 0; x < w; x++) {
+      const xm = (x - 1 + w) % w, xp = (x + 1) % w;
+      const dx = (H[yr + xp] - H[yr + xm]) * k, dy = (H[yp + x] - H[ym + x]) * k;
+      const inv = 1 / Math.sqrt(dx * dx + dy * dy + 1), i = (yr + x) * 4;
+      out[i] = (-dx * inv * 0.5 + 0.5) * 255;
+      out[i + 1] = (dy * inv * 0.5 + 0.5) * 255;
+      out[i + 2] = (inv * 0.5 + 0.5) * 255;
+      out[i + 3] = 255;
+    }
+  }
+  return out;
+}
+
+/* Formed concrete: plywood-cast surface, 1.2 m per tile */
+function genConcrete() {
+  const N = 1024, H = new Float32Array(N * N), C = new Uint8ClampedArray(N * N * 4), R = new Uint8ClampedArray(N * N * 4);
+  const n1 = makePerlin(3), n2 = makePerlin(7), n3 = makePerlin(13), n4 = makePerlin(17), rnd = mulberry32(5);
+  for (let y = 0; y < N; y++) {
+    for (let x = 0; x < N; x++) {
+      const u = x / N, v = y / N, i = y * N + x;
+      const blot = fbm(n1, u, v, 3, 3, 5);
+      const mid = fbm(n2, u, v, 16, 16, 3);
+      const fine = n3(u * 128, v * 128, 128, 128);
+      const streak = fbm(n4, u, v, 20, 2, 3);
+      const wn = rnd() - 0.5;
+      H[i] = 0.14 * mid + 0.12 * fine + 0.22 * wn;
+      const g = 0.6 * (1 + 0.15 * blot + 0.045 * mid + 0.03 * fine + 0.035 * wn + 0.03 * streak);
+      C[i * 4] = g * 255; C[i * 4 + 1] = g * 252; C[i * 4 + 2] = g * 243; C[i * 4 + 3] = 255;
+      R[i * 4] = 255; R[i * 4 + 1] = (0.86 + 0.06 * mid + 0.05 * wn) * 255; R[i * 4 + 2] = 0; R[i * 4 + 3] = 255;
+    }
+  }
+  // bug holes (surface air voids)
+  for (let k = 0; k < 380; k++) {
+    const cx = Math.floor(rnd() * N), cy = Math.floor(rnd() * N), r = 0.7 + Math.pow(rnd(), 3) * 3.4, r2 = r * r, R0 = Math.ceil(r);
+    for (let dy = -R0; dy <= R0; dy++) for (let dx = -R0; dx <= R0; dx++) {
+      const d2 = dx * dx + dy * dy; if (d2 > r2) continue;
+      const x = (cx + dx + N) % N, y = (cy + dy + N) % N, i = y * N + x, f = Math.sqrt(1 - d2 / r2);
+      H[i] -= 2.4 * f;
+      const dk = 1 - 0.4 * f; C[i * 4] *= dk; C[i * 4 + 1] *= dk; C[i * 4 + 2] *= dk;
+    }
+  }
+  return {
+    map: canvasTex(rgbaCanvas(N, N, C), true),
+    normal: canvasTex(rgbaCanvas(N, N, normalFromHeight(H, N, N, 1.1)), false),
+    rough: canvasTex(rgbaCanvas(N, N, R), false),
+  };
+}
+
+/* Sawn section: mortar + coarse aggregate, 0.35 m per tile */
+function genSection() {
+  const N = 1024, rnd = mulberry32(21);
+  const c = document.createElement('canvas'); c.width = c.height = N; const g = c.getContext('2d');
+  const hc = document.createElement('canvas'); hc.width = hc.height = N; const h = hc.getContext('2d');
+  g.fillStyle = '#9d9a90'; g.fillRect(0, 0, N, N);
+  h.fillStyle = '#6e6e6e'; h.fillRect(0, 0, N, N);
+  const pal = [[116, 111, 103], [140, 133, 121], [168, 158, 140], [92, 94, 97], [152, 143, 128], [124, 115, 105], [180, 171, 155], [84, 80, 76], [134, 121, 104]];
+  const CELL = 64, GN = N / CELL, grid = Array.from({ length: GN * GN }, () => []);
+  const radii = [];
+  for (let k = 0; k < 3400; k++) radii.push(5 + 30 * Math.pow(rnd(), 2.4));
+  radii.sort((a, b) => b - a);
+  const fits = (x, y, r) => {
+    const cx = Math.floor(x / CELL), cy = Math.floor(y / CELL);
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+      for (const p of grid[((cy + dy + GN) % GN) * GN + ((cx + dx + GN) % GN)]) {
+        let ddx = Math.abs(p[0] - x), ddy = Math.abs(p[1] - y);
+        if (ddx > N / 2) ddx = N - ddx; if (ddy > N / 2) ddy = N - ddy;
+        const m = (p[2] + r) * 0.8; if (ddx * ddx + ddy * ddy < m * m) return false;
+      }
+    }
+    return true;
+  };
+  for (const r of radii) {
+    let x = 0, y = 0, ok = false;
+    for (let t = 0; t < 14 && !ok; t++) { x = rnd() * N; y = rnd() * N; ok = fits(x, y, r); }
+    if (!ok) continue;
+    grid[Math.floor(y / CELL) * GN + Math.floor(x / CELL)].push([x, y, r]);
+    const nv = 7 + Math.floor(rnd() * 5), rot = rnd() * Math.PI, el = 0.62 + rnd() * 0.38, pts = [];
+    for (let j = 0; j < nv; j++) {
+      const a = (j / nv) * Math.PI * 2, rr = r * (0.78 + rnd() * 0.3), px = Math.cos(a) * rr, py = Math.sin(a) * rr * el;
+      pts.push([px * Math.cos(rot) - py * Math.sin(rot), px * Math.sin(rot) + py * Math.cos(rot)]);
+    }
+    const col = pal[Math.floor(rnd() * pal.length)], sh = 0.86 + rnd() * 0.24;
+    const c1 = `rgb(${col.map((v) => Math.min(255, v * sh * 1.05) | 0).join(',')})`;
+    const c2 = `rgb(${col.map((v) => (v * sh * 0.88) | 0).join(',')})`;
+    for (const ox of [-N, 0, N]) for (const oy of [-N, 0, N]) {
+      const X = x + ox, Y = y + oy;
+      if (X < -r * 1.3 || X > N + r * 1.3 || Y < -r * 1.3 || Y > N + r * 1.3) continue;
+      const path = new Path2D();
+      pts.forEach((p, j) => (j ? path.lineTo(X + p[0], Y + p[1]) : path.moveTo(X + p[0], Y + p[1])));
+      path.closePath();
+      const gr = g.createRadialGradient(X - r * 0.35, Y - r * 0.35, r * 0.1, X, Y, r * 1.15);
+      gr.addColorStop(0, c1); gr.addColorStop(1, c2);
+      g.fillStyle = gr; g.fill(path);
+      g.strokeStyle = 'rgba(58,56,52,0.42)'; g.lineWidth = 1.3; g.stroke(path);
+      h.fillStyle = '#9a9a9a'; h.fill(path);
+    }
+  }
+  for (let k = 0; k < 420; k++) {
+    const x = rnd() * N, y = rnd() * N, r = 0.8 + Math.pow(rnd(), 2) * 3.2;
+    g.fillStyle = 'rgba(46,44,41,0.85)'; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill();
+    h.fillStyle = '#1e1e1e'; h.beginPath(); h.arc(x, y, r, 0, 7); h.fill();
+  }
+  const img = g.getImageData(0, 0, N, N), d = img.data, hd = h.getImageData(0, 0, N, N).data;
+  const n1 = makePerlin(77), H = new Float32Array(N * N), R = new Uint8ClampedArray(N * N * 4);
+  for (let i = 0; i < N * N; i++) {
+    const x = i % N, y = (i / N) | 0;
+    const s = (rnd() - 0.5) * 26 + fbm(n1, x / N, y / N, 8, 8, 3) * 16;
+    d[i * 4] += s; d[i * 4 + 1] += s; d[i * 4 + 2] += s * 0.95;
+    const hv = hd[i * 4] / 255;
+    H[i] = hv + (rnd() - 0.5) * 0.08;
+    R[i * 4] = 255; R[i * 4 + 1] = (hv > 0.5 ? 0.58 : hv < 0.2 ? 0.95 : 0.87) * 255; R[i * 4 + 2] = 0; R[i * 4 + 3] = 255;
+  }
+  g.putImageData(img, 0, 0);
+  return {
+    map: canvasTex(c, true),
+    normal: canvasTex(rgbaCanvas(N, N, normalFromHeight(H, N, N, 2.2)), false),
+    rough: canvasTex(rgbaCanvas(N, N, R), false),
+  };
+}
+
+/* Deformed bar: 2 longitudinal ribs + inclined transverse ribs + mill scale/rust.
+   u runs along the bar (0.4 m per tile for a 20 mm bar), v around it. */
+function genRebar() {
+  const W = 1024, Hh = 128, H = new Float32Array(W * Hh), C = new Uint8ClampedArray(W * Hh * 4), O = new Uint8ClampedArray(W * Hh * 4);
+  const n1 = makePerlin(31), n2 = makePerlin(37), rnd = mulberry32(8), ribs = 30;
+  for (let y = 0; y < Hh; y++) {
+    const v = y / Hh;
+    for (let x = 0; x < W; x++) {
+      const u = x / W, i = y * W + x;
+      const dL = Math.min(Math.abs(v - 0.25), Math.abs(v - 0.75));
+      const hL = Math.exp(-((dL / 0.02) ** 2));
+      const side = v > 0.25 && v < 0.75 ? 0 : 1;
+      const local = side === 0 ? (v - 0.25) / 0.5 : ((v + 0.25) % 1) / 0.5;
+      const taper = Math.pow(Math.max(0, Math.sin(Math.PI * local)), 0.5);
+      const inc = (side === 0 ? 1 : -1) * (local - 0.5) * 0.9;
+      const ph = u * ribs + inc + side * 0.5, dd = ph - Math.round(ph);
+      const hT = Math.exp(-((dd / 0.12) ** 2)) * taper;
+      const hh = Math.max(hL * 0.85, hT) + 0.04 * (rnd() - 0.5);
+      H[i] = hh;
+      const rn = 0.5 + 0.9 * fbm(n1, u, v, 8, 2, 5) + 0.25 * (0.5 - hh);
+      const rust = smooth(0.3, 0.75, rn);
+      const deep = 0.5 + 0.5 * fbm(n2, u, v, 16, 2, 3);
+      const sr = 74, sg = 71, sb = 68;
+      const rr = mix(150, 104, deep), rg = mix(80, 54, deep), rb = mix(40, 28, deep);
+      const k = 1 + 0.08 * (rnd() - 0.5);
+      C[i * 4] = mix(sr, rr, rust) * k; C[i * 4 + 1] = mix(sg, rg, rust) * k; C[i * 4 + 2] = mix(sb, rb, rust) * k; C[i * 4 + 3] = 255;
+      O[i * 4] = 255; O[i * 4 + 1] = mix(0.48, 0.9, rust) * 255; O[i * 4 + 2] = mix(0.72, 0.12, rust) * 255; O[i * 4 + 3] = 255;
+    }
+  }
+  return {
+    map: canvasTex(rgbaCanvas(W, Hh, C), true),
+    normal: canvasTex(rgbaCanvas(W, Hh, normalFromHeight(H, W, Hh, 3.2)), false),
+    orm: canvasTex(rgbaCanvas(W, Hh, O), false),
+  };
+}
+
+/* Red-oxide primer on structural steel, 0.6 m per tile */
+function genPaint() {
+  const N = 512, H = new Float32Array(N * N), C = new Uint8ClampedArray(N * N * 4), R = new Uint8ClampedArray(N * N * 4);
+  const n1 = makePerlin(91), n2 = makePerlin(93), rnd = mulberry32(4);
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+    const u = x / N, v = y / N, i = y * N + x;
+    const mott = fbm(n1, u, v, 4, 4, 5), streak = fbm(n2, u, v, 48, 3, 2), fine = rnd() - 0.5;
+    const k = 1 + 0.07 * mott + 0.05 * streak + 0.03 * fine;
+    const sc = smooth(0.46, 0.56, mott) * 0.3;
+    C[i * 4] = mix(124 * k, 70, sc); C[i * 4 + 1] = mix(49 * k, 66, sc); C[i * 4 + 2] = mix(35 * k, 62, sc); C[i * 4 + 3] = 255;
+    R[i * 4] = 255; R[i * 4 + 1] = (0.5 + 0.1 * streak + 0.2 * sc) * 255; R[i * 4 + 2] = (0.08 + 0.6 * sc) * 255; R[i * 4 + 3] = 255;
+    H[i] = 0.5 * streak + 0.2 * fine;
+  }
+  return {
+    map: canvasTex(rgbaCanvas(N, N, C), true),
+    normal: canvasTex(rgbaCanvas(N, N, normalFromHeight(H, N, N, 0.9)), false),
+    rough: canvasTex(rgbaCanvas(N, N, R), false),
+  };
+}
+
+/* Bituminous fiberboard joint filler */
+function genFiller() {
+  const N = 256, H = new Float32Array(N * N), C = new Uint8ClampedArray(N * N * 4), n1 = makePerlin(55), rnd = mulberry32(6);
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+    const u = x / N, v = y / N, i = y * N + x, f = fbm(n1, u, v, 32, 4, 3), w = rnd() - 0.5;
+    const k = 1 + 0.35 * f + 0.15 * w;
+    C[i * 4] = 52 * k; C[i * 4 + 1] = 41 * k; C[i * 4 + 2] = 31 * k; C[i * 4 + 3] = 255;
+    H[i] = f + 0.3 * w;
+  }
+  return { map: canvasTex(rgbaCanvas(N, N, C), true), normal: canvasTex(rgbaCanvas(N, N, normalFromHeight(H, N, N, 2)), false) };
+}
+
+/* Excavation wall: topsoil / clay / weathered tuff. u = 2.0 m across, v = 2.2 m deep (row 0 = grade) */
+function genSoilWall() {
+  const W = 512, Hh = 512, H = new Float32Array(W * Hh), C = new Float32Array(W * Hh * 3);
+  const nA = makePerlin(41), nB = makePerlin(43), nC = makePerlin(47), nD = makePerlin(49), rnd = mulberry32(9);
+  const top = [70, 54, 40], clay = [132, 92, 61], tuff = [166, 148, 114];
+  const b1s = [], b2s = [];
+  for (let x = 0; x < W; x++) { const u = x / W; b1s.push(0.3 + 0.06 * fbm(nA, u, 0.37, 4, 1, 3)); b2s.push(1.12 + 0.1 * fbm(nB, u, 0.71, 3, 1, 3)); }
+  for (let y = 0; y < Hh; y++) {
+    const depth = (y / Hh) * 2.2;
+    for (let x = 0; x < W; x++) {
+      const u = x / W, i = y * W + x;
+      const t1 = smooth(b1s[x] - 0.035, b1s[x] + 0.035, depth), t2 = smooth(b2s[x] - 0.06, b2s[x] + 0.06, depth);
+      const tex = fbm(nC, u, depth / 2.2, 8, 8, 5), lam = fbm(nD, u, depth / 2.2, 2, 32, 3);
+      const k = (1 + 0.2 * tex + 0.07 * (rnd() - 0.5)) * (1 + 0.06 * lam);
+      for (let c = 0; c < 3; c++) C[i * 3 + c] = mix(mix(top[c], clay[c], t1), tuff[c], t2) * k;
+      H[i] = 0.9 * tex + 0.35 * (rnd() - 0.5) + 0.3 * lam;
+    }
+  }
+  const blob = (cx, cy, rx, ry, col, lift) => {
+    for (let dy = -Math.ceil(ry); dy <= Math.ceil(ry); dy++) for (let dx = -Math.ceil(rx); dx <= Math.ceil(rx); dx++) {
+      const q = (dx * dx) / (rx * rx) + (dy * dy) / (ry * ry); if (q > 1) continue;
+      const x = (Math.round(cx) + dx + W) % W, y = Math.round(cy) + dy; if (y < 0 || y >= Hh) continue;
+      const i = y * W + x, f = Math.sqrt(1 - q), sh = 0.78 + 0.32 * (1 - (dx + dy) / (rx + ry + 1e-3)) * 0.5;
+      for (let c = 0; c < 3; c++) C[i * 3 + c] = mix(C[i * 3 + c], col[c] * sh, Math.min(1, f * 2));
+      H[i] += lift * f;
+    }
+  };
+  for (let k = 0; k < 340; k++) {
+    const x = rnd() * W, y = (0.5 + 0.5 * rnd()) * Hh, r = 1.2 + Math.pow(rnd(), 2) * 5;
+    const g = 120 + rnd() * 70; blob(x, y, r, r * (0.6 + rnd() * 0.4), [g, g * 0.95, g * 0.86], 1.4);
+  }
+  for (let k = 0; k < 70; k++) { const x = rnd() * W, y = (0.16 + 0.34 * rnd()) * Hh, r = 1 + rnd() * 2.5; blob(x, y, r, r * 0.7, [150, 140, 125], 1); }
+  for (let k = 0; k < 38; k++) {
+    let x = rnd() * W, y = rnd() * 20;
+    for (let s = 0; s < 70; s++) {
+      x += (rnd() - 0.5) * 2.2; y += rnd() * 1.4; if (y >= Hh * 0.17) break;
+      const i = Math.floor(y) * W + ((Math.floor(x) % W) + W) % W;
+      for (let c = 0; c < 3; c++) C[i * 3 + c] *= 0.55;
+      H[i] += 0.6;
+    }
+  }
+  const out = new Uint8ClampedArray(W * Hh * 4);
+  for (let i = 0; i < W * Hh; i++) { out[i * 4] = C[i * 3]; out[i * 4 + 1] = C[i * 3 + 1]; out[i * 4 + 2] = C[i * 3 + 2]; out[i * 4 + 3] = 255; }
+  const map = canvasTex(rgbaCanvas(W, Hh, out), true), normal = canvasTex(rgbaCanvas(W, Hh, normalFromHeight(H, W, Hh, 2.6)), false);
+  map.wrapT = normal.wrapT = THREE.ClampToEdgeWrapping;
+  return { map, normal };
+}
+
+/* Compacted site soil with gravel, 2.5 m per tile */
+function genGround() {
+  const N = 512, H = new Float32Array(N * N), C = new Float32Array(N * N * 3), n1 = makePerlin(61), n2 = makePerlin(67), rnd = mulberry32(10);
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+    const u = x / N, v = y / N, i = y * N + x;
+    const p = fbm(n1, u, v, 3, 3, 6), f = fbm(n2, u, v, 32, 32, 3), w = rnd() - 0.5;
+    const damp = smooth(0.1, 0.45, p);
+    const k = 1 + 0.12 * f + 0.08 * w;
+    C[i * 3] = mix(128, 96, damp) * k; C[i * 3 + 1] = mix(110, 80, damp) * k; C[i * 3 + 2] = mix(90, 63, damp) * k;
+    H[i] = 0.7 * f + 0.4 * w;
+  }
+  for (let k = 0; k < 1500; k++) {
+    const cx = Math.floor(rnd() * N), cy = Math.floor(rnd() * N), r = 0.8 + Math.pow(rnd(), 2) * 2.4, g = 108 + rnd() * 48;
+    for (let dy = -3; dy <= 3; dy++) for (let dx = -3; dx <= 3; dx++) {
+      const q = (dx * dx + dy * dy) / (r * r); if (q > 1) continue;
+      const i = ((cy + dy + N) % N) * N + ((cx + dx + N) % N), f = Math.sqrt(1 - q);
+      C[i * 3] = mix(C[i * 3], g, f); C[i * 3 + 1] = mix(C[i * 3 + 1], g * 0.97, f); C[i * 3 + 2] = mix(C[i * 3 + 2], g * 0.9, f);
+      H[i] += 1.2 * f;
+    }
+  }
+  const out = new Uint8ClampedArray(N * N * 4);
+  for (let i = 0; i < N * N; i++) { out[i * 4] = C[i * 3]; out[i * 4 + 1] = C[i * 3 + 1]; out[i * 4 + 2] = C[i * 3 + 2]; out[i * 4 + 3] = 255; }
+  return { map: canvasTex(rgbaCanvas(N, N, out), true), normal: canvasTex(rgbaCanvas(N, N, normalFromHeight(H, N, N, 1.6)), false) };
+}
+
+/* ------------------------------------------------------------------ */
+/* Geometry helpers (all non-indexed with position/normal/uv)         */
+/* ------------------------------------------------------------------ */
+const CUT = 0; // cutaway removes the quadrant x > 0, z > 0 (the side facing the default camera)
+
+function trisToGeo(tris, center) {
+  const pos = new Float32Array(tris.length * 9), nor = new Float32Array(tris.length * 9);
+  const e1 = new V3(), e2 = new V3(), nn = new V3(), fc = new V3();
+  tris.forEach((t, k) => {
+    let [A, B, C] = t;
+    e1.set(B[0] - A[0], B[1] - A[1], B[2] - A[2]); e2.set(C[0] - A[0], C[1] - A[1], C[2] - A[2]);
+    nn.crossVectors(e1, e2);
+    fc.set((A[0] + B[0] + C[0]) / 3 - center[0], (A[1] + B[1] + C[1]) / 3 - center[1], (A[2] + B[2] + C[2]) / 3 - center[2]);
+    if (nn.dot(fc) < 0) { [B, C] = [C, B]; nn.negate(); }
+    nn.normalize();
+    [A, B, C].forEach((p, j) => { pos.set(p, k * 9 + j * 3); nor.set([nn.x, nn.y, nn.z], k * 9 + j * 3); });
+  });
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  g.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
+  return g;
+}
+// convex prism: poly = [[a,b],...]; axis 'y' → poly in (x,z); 'z' → poly in (x,y); 'x' → poly in (z,y)
+function prism(poly, h0, h1, axis = 'y', uvScale = 1 / 1.2) {
+  const M = axis === 'y' ? (a, b, h) => [a, h, b] : axis === 'z' ? (a, b, h) => [a, b, h] : (a, b, h) => [h, b, a];
+  const n = poly.length, tris = [];
+  for (let i = 1; i < n - 1; i++) {
+    tris.push([M(...poly[0], h0), M(...poly[i], h0), M(...poly[i + 1], h0)]);
+    tris.push([M(...poly[0], h1), M(...poly[i], h1), M(...poly[i + 1], h1)]);
+  }
+  for (let i = 0; i < n; i++) {
+    const p = poly[i], q = poly[(i + 1) % n];
+    const A = M(...p, h0), B = M(...q, h0), C = M(...q, h1), D = M(...p, h1);
+    tris.push([A, B, C], [A, C, D]);
+  }
+  const c = [0, 0, 0];
+  poly.forEach((p) => { const w = M(p[0], p[1], (h0 + h1) / 2); c[0] += w[0] / n; c[1] += w[1] / n; c[2] += w[2] / n; });
+  const g = trisToGeo(tris, c);
+  setBoxUV(g, () => uvScale);
+  return g;
+}
+// world-space box projection so textures run continuously across pieces
+function setBoxUV(geo, scaleOf) {
+  const p = geo.attributes.position.array, n = p.length / 9, uv = new Float32Array(n * 6);
+  for (let t = 0; t < n; t++) {
+    const o = t * 9;
+    const ax = p[o + 3] - p[o], ay = p[o + 4] - p[o + 1], az = p[o + 5] - p[o + 2];
+    const bx = p[o + 6] - p[o], by = p[o + 7] - p[o + 1], bz = p[o + 8] - p[o + 2];
+    const nx = Math.abs(ay * bz - az * by), ny = Math.abs(az * bx - ax * bz), nz = Math.abs(ax * by - ay * bx);
+    const s = scaleOf(t);
+    for (let k = 0; k < 3; k++) {
+      const x = p[o + k * 3], y = p[o + k * 3 + 1], z = p[o + k * 3 + 2];
+      let u, v;
+      if (ny >= nx && ny >= nz) { u = x; v = z; } else if (nx >= nz) { u = z; v = y; } else { u = x; v = y; }
+      uv[t * 6 + k * 2] = u * s; uv[t * 6 + k * 2 + 1] = v * s;
+    }
+  }
+  geo.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+}
+function clipPoly(poly, f) { // keep f(p) <= 0
+  const out = [];
+  for (let i = 0; i < poly.length; i++) {
+    const P = poly[i], Q = poly[(i + 1) % poly.length], fp = f(P), fq = f(Q);
+    if (fp <= 0) out.push(P);
+    if ((fp < 0 && fq > 0) || (fp > 0 && fq < 0)) { const t = fp / (fp - fq); out.push([P[0] + (Q[0] - P[0]) * t, P[1] + (Q[1] - P[1]) * t]); }
+  }
+  return out;
+}
+const polyArea = (p) => p.reduce((s, a, i) => { const b = p[(i + 1) % p.length]; return s + a[0] * b[1] - b[0] * a[1]; }, 0) / 2;
+// split triangles into [formed faces, sawn cut faces] material groups
+function groupCutFaces(g) {
+  const p = g.attributes.position.array, nr = g.attributes.normal.array, n = p.length / 9;
+  const keep = [], cut = [];
+  for (let t = 0; t < n; t++) {
+    const o = t * 9, cx = (p[o] + p[o + 3] + p[o + 6]) / 3, cz = (p[o + 2] + p[o + 5] + p[o + 8]) / 3;
+    const isCut = (nr[o] > 0.99 && Math.abs(cx - CUT) < 1e-5) || (nr[o + 2] > 0.99 && Math.abs(cz - CUT) < 1e-5);
+    (isCut ? cut : keep).push(t);
+  }
+  const order = keep.concat(cut), pos = new Float32Array(n * 9), nor = new Float32Array(n * 9);
+  order.forEach((t, k) => { pos.set(p.subarray(t * 9, t * 9 + 9), k * 9); nor.set(nr.subarray(t * 9, t * 9 + 9), k * 9); });
+  const out = new THREE.BufferGeometry();
+  out.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  out.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
+  setBoxUV(out, (t) => (t < keep.length ? 1 / 1.2 : 1 / 0.35));
+  out.addGroup(0, keep.length * 3, 0);
+  out.addGroup(keep.length * 3, cut.length * 3, 1);
+  return out;
+}
+
+// polyline with rounded bends (bend radius r), returns dense Vector3 list
+function roundedPath(pts, r, seg = 8) {
+  const P = pts.map((p) => new V3(p[0], p[1], p[2])), n = P.length, out = [P[0]];
+  for (let i = 1; i < n - 1; i++) {
+    const A = P[i - 1], C = P[i], B = P[i + 1];
+    const d1 = A.clone().sub(C), d2 = B.clone().sub(C), l1 = d1.length(), l2 = d2.length();
+    d1.divideScalar(l1); d2.divideScalar(l2);
+    const ang = Math.acos(THREE.MathUtils.clamp(d1.dot(d2), -1, 1));
+    if (ang > Math.PI - 1e-3) { out.push(C); continue; }
+    const t = Math.min(r / Math.tan(ang / 2), l1 * (i - 1 === 0 ? 0.9 : 0.5), l2 * (i + 1 === n - 1 ? 0.9 : 0.5));
+    const T1 = C.clone().addScaledVector(d1, t), T2 = C.clone().addScaledVector(d2, t);
+    for (let k = 0; k <= seg; k++) {
+      const s = k / seg, a = (1 - s) * (1 - s), b = 2 * (1 - s) * s, c = s * s;
+      out.push(new V3(T1.x * a + C.x * b + T2.x * c, T1.y * a + C.y * b + T2.y * c, T1.z * a + C.z * b + T2.z * c));
+    }
+  }
+  out.push(P[n - 1]);
+  return out;
+}
+// tube along a path with parallel-transport frames and end caps; uv.x = length / texLen
+function sweep(pts, r, radial, texLen) {
+  const n = pts.length, T = [], N = [], B = [], L = [0];
+  for (let i = 0; i < n; i++) { const a = pts[Math.max(0, i - 1)], b = pts[Math.min(n - 1, i + 1)]; T.push(b.clone().sub(a).normalize()); }
+  const ref = Math.abs(T[0].y) < 0.9 ? new V3(0, 1, 0) : new V3(1, 0, 0);
+  N.push(new V3().crossVectors(T[0], ref).normalize());
+  for (let i = 1; i < n; i++) {
+    const ax = new V3().crossVectors(T[i - 1], T[i]), s = ax.length(), nn = N[i - 1].clone();
+    if (s > 1e-8) nn.applyAxisAngle(ax.divideScalar(s), Math.atan2(s, T[i - 1].dot(T[i])));
+    N.push(nn);
+    L.push(L[i - 1] + pts[i].distanceTo(pts[i - 1]));
+  }
+  for (let i = 0; i < n; i++) B.push(new V3().crossVectors(T[i], N[i]));
+  const R = [];
+  for (let i = 0; i < n; i++) {
+    const row = [];
+    for (let j = 0; j <= radial; j++) {
+      const th = (j / radial) * Math.PI * 2, c = Math.cos(th), s = Math.sin(th);
+      const dx = N[i].x * c + B[i].x * s, dy = N[i].y * c + B[i].y * s, dz = N[i].z * c + B[i].z * s;
+      row.push([pts[i].x + dx * r, pts[i].y + dy * r, pts[i].z + dz * r, dx, dy, dz, L[i] / texLen, j / radial]);
+    }
+    R.push(row);
+  }
+  const V = [];
+  for (let i = 0; i < n - 1; i++) for (let j = 0; j < radial; j++) {
+    const a = R[i][j], b = R[i + 1][j], c = R[i + 1][j + 1], d = R[i][j + 1];
+    V.push(a, d, b, b, d, c);
+  }
+  for (const [i, sg] of [[0, -1], [n - 1, 1]]) {
+    const ctr = [pts[i].x, pts[i].y, pts[i].z, T[i].x * sg, T[i].y * sg, T[i].z * sg, L[i] / texLen, 0.5];
+    for (let j = 0; j < radial; j++) {
+      const a = R[i][j].slice(), b = R[i][j + 1].slice();
+      for (const q of [a, b]) { q[3] = ctr[3]; q[4] = ctr[4]; q[5] = ctr[5]; }
+      if (sg > 0) V.push(ctr, a, b); else V.push(ctr, b, a);
+    }
+  }
+  const pos = new Float32Array(V.length * 3), nor = new Float32Array(V.length * 3), uv = new Float32Array(V.length * 2);
+  V.forEach((v, k) => {
+    pos[k * 3] = v[0]; pos[k * 3 + 1] = v[1]; pos[k * 3 + 2] = v[2];
+    nor[k * 3] = v[3]; nor[k * 3 + 1] = v[4]; nor[k * 3 + 2] = v[5];
+    uv[k * 2] = v[6]; uv[k * 2 + 1] = v[7];
+  });
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  g.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
+  g.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+  return g;
+}
+const bar = (pts, dia, bendR) => sweep(roundedPath(pts, bendR ?? dia * 3, 8), dia / 2, dia >= 0.016 ? 10 : 8, 0.4 * (dia / 0.02));
+// closed tie with two 135° seismic hooks at one corner; quarter = which corner holds the hooks
+function tie(a, y, quarter, dia = 0.01) {
+  const e = 0.09 / Math.SQRT2, dy = 0.011;
+  const pts = [[a - e, 0, a - e], [a, 0, a], [a, dy * 0.25, -a], [-a, dy * 0.5, -a], [-a, dy * 0.75, a], [a, dy, a], [a - e, dy, a - e]]
+    .map(([x, yy, z]) => { for (let k = 0; k < quarter; k++) [x, z] = [z, -x]; return [x, yy + y, z]; });
+  return bar(pts, dia, 0.02);
+}
+function hexNut(x, y0, z, s, h) {
+  const g = new THREE.CylinderGeometry(s / Math.sqrt(3), s / Math.sqrt(3), h, 6).toNonIndexed();
+  g.computeVertexNormals(); g.translate(x, y0 + h / 2, z);
+  return g;
+}
+function disc(x, y0, z, r, h, seg = 28) { const g = new THREE.CylinderGeometry(r, r, h, seg).toNonIndexed(); g.translate(x, y0 + h / 2, z); return g; }
+function rod(x, y0, y1, z, r) { const g = new THREE.CylinderGeometry(r, r, y1 - y0, 16, 1).toNonIndexed(); g.translate(x, (y0 + y1) / 2, z); return g; }
+function threads(x, y0, y1, z, r) {
+  const out = [];
+  for (let y = y0; y <= y1; y += 0.003) { const t = new THREE.TorusGeometry(r, 0.0011, 4, 16).toNonIndexed(); t.rotateX(Math.PI / 2); t.translate(x, y, z); out.push(t); }
+  return out;
+}
+const rect = (x0, x1, z0, z1) => [[x0, z0], [x1, z0], [x1, z1], [x0, z1]];
+const sq = (h) => rect(-h, h, -h, h);
+const chamfered = (h, c) => [[-h + c, -h], [h - c, -h], [h, -h + c], [h, h - c], [h - c, h], [-h + c, h], [-h, h - c], [-h, -h + c]];
+// rolled H-section with root fillets; web along x, flanges perpendicular to x
+function hSection(d, bf, tw, tf, r, y0, y1) {
+  const hd = d / 2, hb = bf / 2, hw = tw / 2, fi = hd - tf, s = new THREE.Shape();
+  s.moveTo(hd, -hb); s.lineTo(hd, hb); s.lineTo(fi, hb); s.lineTo(fi, hw + r);
+  s.absarc(fi - r, hw + r, r, 0, -Math.PI / 2, true);
+  s.lineTo(-fi + r, hw);
+  s.absarc(-fi + r, hw + r, r, -Math.PI / 2, -Math.PI, true);
+  s.lineTo(-fi, hb); s.lineTo(-hd, hb); s.lineTo(-hd, -hb); s.lineTo(-fi, -hb); s.lineTo(-fi, -hw - r);
+  s.absarc(-fi + r, -hw - r, r, Math.PI, Math.PI / 2, true);
+  s.lineTo(fi - r, -hw);
+  s.absarc(fi - r, -hw - r, r, Math.PI / 2, 0, true);
+  s.lineTo(fi, -hb); s.closePath();
+  let g = new THREE.ExtrudeGeometry(s, { depth: y1 - y0, bevelEnabled: false, curveSegments: 5 });
+  if (g.index) g = g.toNonIndexed();
+  g.rotateX(-Math.PI / 2); g.translate(0, y0, 0);
+  g.clearGroups();
+  setBoxUV(g, () => 1 / 0.6);
+  return g;
+}
+
+/* ------------------------------------------------------------------ */
+/* Materials (+ a shared vertex hook for the rotation test)           */
+/* ------------------------------------------------------------------ */
+const bend = { uY0: { value: 0 }, uL: { value: 1 }, uA: { value: 0 }, uMode: { value: 0 } };
+function addBend(mat) {
+  mat.onBeforeCompile = (sh) => {
+    Object.assign(sh.uniforms, bend);
+    sh.vertexShader = 'uniform float uY0;\nuniform float uL;\nuniform float uA;\nuniform float uMode;\n' +
+      sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
+      {
+        vec4 bw = vec4(transformed, 1.0);
+        #ifdef USE_INSTANCING
+          bw = instanceMatrix * bw;
+        #endif
+        bw = modelMatrix * bw;
+        float bs = clamp((bw.y - uY0) / uL, 0.0, 1.0);
+        float shp = uMode < 0.5 ? bs * bs * (3.0 - 2.0 * bs) : 1.5 * bs - 0.5 * bs * bs * bs;
+        transformed.x += uA * shp;
+      }`);
+  };
+  return mat;
+}
+const T = {}, M = {};
+function makeMaterials() {
+  const std = (o) => addBend(new THREE.MeshStandardMaterial(o));
+  const conc = { map: T.conc.map, normalMap: T.conc.normal, roughnessMap: T.conc.rough, roughness: 1, metalness: 0 };
+  M.col = std({ ...conc, color: new THREE.Color(1, 0.99, 0.97), normalScale: new THREE.Vector2(0.8, 0.8) });
+  M.ftg = std({ ...conc, color: new THREE.Color(0.66, 0.645, 0.61) });
+  M.lean = std({ ...conc, color: new THREE.Color(0.5, 0.48, 0.45), normalScale: new THREE.Vector2(1.8, 1.8) });
+  M.grout = std({ ...conc, color: new THREE.Color(1.12, 1.12, 1.1), normalScale: new THREE.Vector2(0.3, 0.3) });
+  M.sec = std({ map: T.sec.map, normalMap: T.sec.normal, roughnessMap: T.sec.rough, roughness: 1, metalness: 0 });
+  M.filler = std({ map: T.filler.map, normalMap: T.filler.normal, roughness: 0.92, metalness: 0 });
+  M.xray = std({ color: 0xcfd8de, transparent: true, opacity: 0.13, depthWrite: false, roughness: 0.3, metalness: 0, side: THREE.DoubleSide });
+  M.edge = addBend(new THREE.LineBasicMaterial({ color: 0x20262a, transparent: true, opacity: 0.55 }));
+  M.rebar = std({ map: T.rebar.map, normalMap: T.rebar.normal, roughnessMap: T.rebar.orm, metalnessMap: T.rebar.orm, roughness: 1, metalness: 1, normalScale: new THREE.Vector2(1.3, 1.3) });
+  M.wire = std({ color: 0x2a2826, metalness: 0.6, roughness: 0.5 });
+  M.paint = std({ map: T.paint.map, normalMap: T.paint.normal, roughnessMap: T.paint.rough, metalnessMap: T.paint.rough, roughness: 1, metalness: 1, normalScale: new THREE.Vector2(0.6, 0.6) });
+  M.weld = std({ color: new THREE.Color(0.2, 0.06, 0.04), normalMap: T.rebar.normal, normalScale: new THREE.Vector2(1, 1), roughness: 0.7, metalness: 0.2 });
+  M.galv = std({ color: 0xb6b9bb, metalness: 0.9, roughness: 0.32 });
+  M.soilWall = new THREE.MeshStandardMaterial({ map: T.soil.map, normalMap: T.soil.normal, roughness: 1, metalness: 0, normalScale: new THREE.Vector2(1.5, 1.5) });
+  M.ground = new THREE.MeshStandardMaterial({ map: T.ground.map, normalMap: T.ground.normal, roughness: 1, metalness: 0 });
+}
+
+/* ------------------------------------------------------------------ */
+/* Site: sky, sun, excavation                                         */
+/* ------------------------------------------------------------------ */
+const PIT = -1.575, SOIL = 3.6, SOIL_D = 2.4, PITW = 1.35; // excavation walls 350 mm behind the lean concrete
+const site = {};
+function buildSite() {
+  const sunDir = new V3().setFromSphericalCoords(1, THREE.MathUtils.degToRad(90 - 40), THREE.MathUtils.degToRad(38));
+  const sky = new Sky(); sky.scale.setScalar(10000);
+  const su = sky.material.uniforms;
+  su.turbidity.value = 3.2; su.rayleigh.value = 2.2; su.mieCoefficient.value = 0.004; su.mieDirectionalG.value = 0.8;
+  su.sunPosition.value.copy(sunDir);
+  scene.add(sky);
+
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  const envScene = new THREE.Scene();
+  const sky2 = new Sky(); sky2.scale.setScalar(10000);
+  for (const k of ['turbidity', 'rayleigh', 'mieCoefficient', 'mieDirectionalG']) sky2.material.uniforms[k].value = su[k].value;
+  sky2.material.uniforms.sunPosition.value.copy(sunDir);
+  envScene.add(sky2);
+  const groundDisc = new THREE.Mesh(new THREE.CircleGeometry(400, 32).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: new THREE.Color(0.16, 0.12, 0.09) }));
+  groundDisc.position.y = -2; envScene.add(groundDisc);
+  scene.environment = pmrem.fromScene(envScene, 0.02).texture;
+  scene.fog = new THREE.Fog(0xbfccd6, 30, 160);
+
+  const sun = new THREE.DirectionalLight(0xfff1df, 3.2);
+  sun.position.copy(sunDir).multiplyScalar(16);
+  sun.target.position.set(0, -0.5, 0);
+  sun.castShadow = true;
+  const big = renderer.capabilities.maxTextureSize >= 8192 && window.innerWidth > 820;
+  sun.shadow.mapSize.set(big ? 4096 : 2048, big ? 4096 : 2048);
+  Object.assign(sun.shadow.camera, { left: -4.6, right: 4.6, top: 4.6, bottom: -4.6, near: 2, far: 40 });
+  sun.shadow.bias = -0.0002; sun.shadow.normalBias = 0.012;
+  scene.add(sun, sun.target);
+  scene.add(new THREE.HemisphereLight(0xc9dcef, 0x5d4c3c, 0.35));
+
+  // soil block, excavated toward the camera down to the bottom of the lean concrete
+  const pieces = [prism(rect(-SOIL, -PITW, -SOIL, SOIL), -SOIL_D, 0), prism(rect(-PITW, SOIL, -SOIL, -PITW), -SOIL_D, 0), prism(rect(-PITW, SOIL, -PITW, SOIL), -SOIL_D, PIT)];
+  const soilGeo = mergeGeometries(pieces);
+  const p = soilGeo.attributes.position.array, nr = soilGeo.attributes.normal.array, n = p.length / 9;
+  const tops = [], walls = [];
+  for (let t = 0; t < n; t++) (Math.abs(nr[t * 9 + 1]) > 0.5 ? tops : walls).push(t);
+  const order = tops.concat(walls), pos = new Float32Array(n * 9), nor = new Float32Array(n * 9), uv = new Float32Array(n * 6);
+  order.forEach((t, k) => {
+    pos.set(p.subarray(t * 9, t * 9 + 9), k * 9); nor.set(nr.subarray(t * 9, t * 9 + 9), k * 9);
+    for (let j = 0; j < 3; j++) {
+      const x = p[t * 9 + j * 3], y = p[t * 9 + j * 3 + 1], z = p[t * 9 + j * 3 + 2];
+      if (k < tops.length) { uv[k * 6 + j * 2] = x / 2.5; uv[k * 6 + j * 2 + 1] = -z / 2.5; }
+      else { uv[k * 6 + j * 2] = (Math.abs(nr[t * 9]) > 0.5 ? z : x) / 2.0; uv[k * 6 + j * 2 + 1] = 1 + y / 2.2; }
+    }
+  });
+  const sg = new THREE.BufferGeometry();
+  sg.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  sg.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
+  sg.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+  sg.addGroup(0, tops.length * 3, 0); sg.addGroup(tops.length * 3, walls.length * 3, 1);
+  site.soil = new THREE.Mesh(sg, [M.ground, M.soilWall]);
+  site.soil.castShadow = site.soil.receiveShadow = true;
+  scene.add(site.soil);
+
+  const shape = new THREE.Shape(); shape.absarc(0, 0, 160, 0, Math.PI * 2, false);
+  const hole = new THREE.Path(); hole.moveTo(-SOIL, -SOIL); hole.lineTo(-SOIL, SOIL); hole.lineTo(SOIL, SOIL); hole.lineTo(SOIL, -SOIL); hole.closePath();
+  shape.holes.push(hole);
+  const gg = new THREE.ShapeGeometry(shape, 64); gg.rotateX(-Math.PI / 2);
+  const guv = gg.attributes.uv; for (let i = 0; i < guv.count; i++) guv.setXY(i, guv.getX(i) / 2.5, guv.getY(i) / 2.5);
+  site.ground = new THREE.Mesh(gg, M.ground); site.ground.receiveShadow = true; scene.add(site.ground);
+
+  const fg = new THREE.CircleGeometry(160, 64); fg.rotateX(-Math.PI / 2); fg.translate(0, PIT, 0);
+  const fp = fg.attributes.position, fuv = fg.attributes.uv; for (let i = 0; i < fuv.count; i++) fuv.setXY(i, fp.getX(i) / 2.5, -fp.getZ(i) / 2.5);
+  site.floor = new THREE.Mesh(fg, M.ground); site.floor.receiveShadow = true; scene.add(site.floor);
+}
+
+/* ------------------------------------------------------------------ */
+/* Base details                                                       */
+/* ------------------------------------------------------------------ */
+const FT = -1.05, FBOT = -1.5;              // footing top / bottom (grade = 0)
+const Y_LOW = FBOT + 0.075 + 0.008;         // lower layer of the bottom mat (75 mm cover, 16 mm bars)
+const Y_UP = Y_LOW + 0.016;                 // upper layer
+const Y_HOOK = -1.381;                      // dowel hooks rest on the mat
+const state = { type: 'rc', support: 'fixed', view: 'cut', soil: true, labels: true, test: false, cam: 'overview' };
+let cfg = null, solids = [], labels = [];
+
+function build() {
+  // CSS2D elements only detach when the label itself is removed, so drop them explicitly
+  labels.forEach((l) => l.element.remove());
+  if (cfg) { scene.remove(cfg); cfg.traverse((o) => { if (o.geometry) o.geometry.dispose(); }); }
+  cfg = new THREE.Group(); solids = []; labels = [];
+  const rebar = [], bolts = [], paint = [], welds = [], spacers = [], wires = [];
+  const mats = {
+    col: { formed: M.col, section: M.sec }, ftg: { formed: M.ftg, section: M.sec }, lean: { formed: M.lean, section: M.lean },
+    grout: { formed: M.grout, section: M.grout }, filler: { formed: M.filler, section: M.filler },
+  };
+  const solid = (poly, y0, y1, m) => {
+    const full = prism(poly, y0, y1);
+    const pieces = [clipPoly(poly, (q) => q[0] - CUT), clipPoly(clipPoly(poly, (q) => CUT - q[0]), (q) => q[1] - CUT)]
+      .filter((pc) => pc.length >= 3 && Math.abs(polyArea(pc)) > 1e-7);
+    const fm = new THREE.Mesh(full, m.formed); fm.castShadow = fm.receiveShadow = true;
+    const cm = new THREE.Mesh(groupCutFaces(mergeGeometries(pieces.map((pc) => prism(pc, y0, y1)))), [m.formed, m.section]);
+    cm.castShadow = cm.receiveShadow = true;
+    const ed = new THREE.LineSegments(new THREE.EdgesGeometry(full, 25), M.edge);
+    cfg.add(fm, cm, ed);
+    solids.push({ full: fm, cut: cm, edges: ed, formed: m.formed });
+  };
+  const narrow = window.innerWidth <= 820;
+  const label = (pos, title, sub, kind, off, detail = false) => {
+    if (narrow) off = [off[0] * 0.55, off[1] * 0.55];
+    const el = document.createElement('div');
+    el.className = 'tag ' + (off[0] < 0 ? 'tag-l' : 'tag-r');
+    const len = Math.hypot(off[0], off[1]), ang = (Math.atan2(off[1], off[0]) * 180) / Math.PI;
+    el.innerHTML = `<i class="tag-dot"></i><i class="tag-lead" style="width:${len.toFixed(1)}px;transform:rotate(${ang.toFixed(1)}deg)"></i>` +
+      `<span class="tag-pill" style="left:${off[0]}px;top:${off[1]}px">${title}${sub ? `<small>${sub}</small>` : ''}</span>`;
+    const o = new CSS2DObject(el); o.position.set(...pos); o.userData.kind = kind; o.userData.detail = detail;
+    cfg.add(o); labels.push(o);
+  };
+
+  /* --- common: lean concrete, footing, bottom mat, spacers, tie wire --- */
+  solid(rect(-1.0, 1.0, -1.0, 1.0), PIT, FBOT, mats.lean);
+  solid(sq(0.9), FBOT, FT, mats.ftg);
+  const nb = 12, zs = [], xs = [];
+  for (let k = 0; k < nb; k++) zs.push(-0.8 + (k * 1.6) / (nb - 1));
+  for (let k = 0; k < nb; k++) xs.push(-0.78 + (k * 1.56) / (nb - 1));
+  zs.forEach((z) => rebar.push(bar([[-0.817, Y_LOW + 0.19, z], [-0.817, Y_LOW, z], [0.817, Y_LOW, z], [0.817, Y_LOW + 0.19, z]], 0.016, 0.05)));
+  xs.forEach((x) => rebar.push(bar([[x, Y_UP + 0.19, -0.815], [x, Y_UP, -0.815], [x, Y_UP, 0.815], [x, Y_UP + 0.19, 0.815]], 0.016, 0.05)));
+  xs.forEach((x, j) => zs.forEach((z, k) => {
+    if ((j + k) % 2 === 0 || j === 0 || k === 0 || j === nb - 1 || k === nb - 1) wires.push([x, (Y_LOW + Y_UP) / 2, z, (j + k) % 2]);
+  }));
+  for (const x of [-0.6, -0.2, 0.2, 0.6]) for (const k of [1, 4, 7, 10]) spacers.push(prism(rect(x - 0.025, x + 0.025, zs[k] - 0.025, zs[k] + 0.025), FBOT, Y_LOW - 0.008));
+  label([0.9, -1.28, 0], 'Isolated footing', '1.80 × 1.80 × 0.45 m', 'c', [54, 14]);
+  label([1.0, -1.54, 0], 'Lean concrete', '75 mm, under the footing', 'c', [44, 40]);
+  label([0.55, Y_LOW, zs[8]], 'Bottom mat 16 mmØ', 'both ways, ≈150 mm o.c.', 'r', [-46, 52]);
+  label([0.6, -1.46, zs[10]], 'Spacer block (dobos)', 'keeps 75 mm cover', 'r', [34, 50], true);
+
+  const colBars = (c, m) => {
+    const out = [];
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+      out.push([sx * c, sz * c, sx, 0]);
+      out.push([sx * c, sz * m, sx, 0]);
+      out.push([sx * m, sz * c, 0, sz]);
+    }
+    return out;
+  };
+
+  if (state.type === 'rc') {
+    const fixed = state.support === 'fixed';
+    const colBot = fixed ? FT : FT + 0.05;
+    solid(chamfered(0.2, 0.02), colBot, 1.2, mats.col);
+    if (!fixed) {
+      solid(rect(-0.065, 0.065, -0.2, 0.2), FT, FT + 0.05, mats.col);
+      solid(rect(0.065, 0.19, -0.19, 0.19), FT, FT + 0.05, mats.filler);
+      solid(rect(-0.19, -0.065, -0.19, 0.19), FT, FT + 0.05, mats.filler);
+    }
+    colBars(0.14, 0.0467).forEach(([x, z, hx, hz]) => {
+      rebar.push(fixed
+        ? bar([[x, 2.0, z], [x, Y_HOOK, z], [x + hx * 0.24, Y_HOOK, z + hz * 0.24]], 0.02, 0.06)
+        : bar([[x, 2.0, z], [x, -0.95, z]], 0.02));
+    });
+    const ties = fixed
+      ? [-1.25, -1.15, -1.0, -0.9, -0.8, -0.7, -0.6, -0.5]
+      : [-0.97, -0.92, -0.87, -0.82, -0.72, -0.62, -0.52, -0.42];
+    for (let y = fixed ? -0.35 : -0.27; y <= 1.16; y += 0.15) ties.push(y);
+    ties.push(1.5, 1.85);
+    ties.forEach((y, i) => rebar.push(tie(0.155, y, i % 4)));
+    if (!fixed) {
+      const yc = FT + 0.025;
+      [-0.12, -0.072, -0.024, 0.024, 0.072, 0.12].forEach((z, i) => {
+        const s = i % 2 === 0 ? 1 : -1;
+        rebar.push(bar([[s * 0.13, yc + 0.5, z], [-s * 0.0858, -1.355, z], [-s * 0.2058, -1.355, z]], 0.02, 0.06));
+      });
+      for (const [y, o] of [[-1.12, 0], [-1.17, 0]]) {
+        for (const q of [-0.18, -0.06, 0.06, 0.18]) {
+          rebar.push(bar([[-0.24, y + o, q], [0.24, y + o, q]], 0.01));
+          rebar.push(bar([[q, y + 0.01, -0.24], [q, y + 0.01, 0.24]], 0.01));
+        }
+      }
+    }
+    label([0.2, 0.72, 0], 'RC column 400 × 400', '20 mm chamfered corners', 'c', [52, -26]);
+    label([0.14, 1.72, 0.14], 'Starter bars', 'lap splice for the next pour', 'a', [52, -18]);
+    label([0.14, 0.3, 0.14], '12 – 20 mmØ column bars', fixed ? 'tuloy hanggang footing' : 'stop above the hinge', 'r', [-62, -18]);
+    if (fixed) {
+      label([0.2, FT, 0], 'Construction joint', 'top of footing, separate pour', 'c', [70, -40]);
+      label([0.3, Y_HOOK, 0.0467], 'Dowel: 90° hook', '12d<sub>b</sub> ≈ 240 mm on the mat', 'r', [-70, -34]);
+      label([0.155, -0.5, 0.09], '10 mmØ ties', '135° seismic hooks', 'r', [-74, 26]);
+    } else {
+      label([-0.02, FT + 0.025, 0.2], 'Throat 130 mm', 'the only concrete that crosses', 'c', [-66, -30]);
+      label([0.19, FT + 0.025, 0], 'Joint filler + sealant', 'lets the base rotate', 'c', [70, 34]);
+      label([0.0585, -0.8, 0.072], 'Crossed bars', 'Mesnager hinge, 6 – 20 mmØ', 'r', [-78, 4]);
+      label([0.14, -0.95, 0.14], 'Bars stop 50 mm above joint', '', 'r', [60, -44]);
+      label([0.18, -1.11, 0.1], 'Bursting mesh', '2 layers 10 mmØ', 'r', [46, 42], true);
+    }
+    bend.uY0.value = fixed ? FT : FT + 0.025;
+  } else {
+    const fixed = state.support === 'fixed';
+    const pTop = fixed ? 0.29 : 0.272, half = fixed ? 0.25 : 0.175;
+    solid(chamfered(0.375, 0.02), FT, 0.2, mats.col);
+    solid(sq(half + 0.05), 0.2, 0.25, mats.grout);
+    colBars(0.305, 0.1017).forEach(([x, z, hx, hz]) => rebar.push(bar([[x, 0.15, z], [x, Y_HOOK, z], [x + hx * 0.24, Y_HOOK, z + hz * 0.24]], 0.02, 0.06)));
+    const ties = [0.13, 0.08, 0.03];
+    for (let y = -0.12; y >= -1.01; y -= 0.15) ties.push(y);
+    ties.push(-1.15, -1.25);
+    ties.forEach((y, i) => rebar.push(tie(0.32, y, i % 4)));
+
+    paint.push(prism(sq(half), 0.25, pTop, 'y', 1 / 0.6));
+    paint.push(hSection(0.25, 0.25, 0.009, 0.014, 0.013, pTop, 2.4));
+    const wr = fixed ? 0.0058 : 0.0048, o = wr * 0.55, yw = pTop + o;
+    const weld = (a, b) => welds.push(sweep([new V3(...a), new V3(...b)], wr, 8, 0.03));
+    for (const sx of [-1, 1]) {
+      weld([sx * (0.125 + o), yw, -0.125], [sx * (0.125 + o), yw, 0.125]);
+      for (const sz of [-1, 1]) {
+        weld([sx * (0.111 - o), yw, sz * 0.018], [sx * (0.111 - o), yw, sz * 0.125]);
+        weld([sx * 0.111, yw, sz * (0.125 + o)], [sx * 0.125, yw, sz * (0.125 + o)]);
+      }
+    }
+    for (const sz of [-1, 1]) weld([-0.098, yw, sz * (0.0045 + o)], [0.098, yw, sz * (0.0045 + o)]);
+
+    if (fixed) {
+      for (const sx of [-1, 1]) for (const zc of [-0.119, 0, 0.119]) {
+        const poly = [[0.14, pTop], [0.24, pTop], [0.24, pTop + 0.05], [0.125, pTop + 0.2], [0.125, pTop + 0.015]].map(([x, y]) => [sx * x, y]);
+        paint.push(prism(poly, zc - 0.006, zc + 0.006, 'z', 1 / 0.6));
+        for (const sz of [-1, 1]) {
+          const zz = zc + sz * (0.006 + o);
+          weld([sx * (0.125 + o), pTop + 0.016, zz], [sx * (0.125 + o), pTop + 0.2, zz]);
+          weld([sx * 0.14, yw, zz], [sx * 0.24, yw, zz]);
+        }
+      }
+      for (const x of [-0.19, 0.19]) for (const z of [-0.19, -0.065, 0.065, 0.19]) {
+        bolts.push(rod(x, -0.45, 0.352, z, 0.012));
+        bolts.push(prism(rect(x - 0.04, x + 0.04, z - 0.04, z + 0.04), -0.44, -0.428));
+        bolts.push(hexNut(x, -0.428, z, 0.036, 0.022));
+        bolts.push(hexNut(x, 0.218, z, 0.036, 0.022), disc(x, 0.24, z, 0.025, 0.004));
+        bolts.push(prism(rect(x - 0.035, x + 0.035, z - 0.035, z + 0.035), pTop, pTop + 0.012));
+        bolts.push(hexNut(x, pTop + 0.012, z, 0.036, 0.022));
+        bolts.push(...threads(x, pTop + 0.036, 0.35, z, 0.0122));
+      }
+      label([0.125, 1.5, 0.06], 'H 250 × 250 × 9 × 14', 'red oxide primer', 's', [56, -20]);
+      label([0.25, 0.27, 0.13], 'Base plate 40 mm', '500 × 500', 's', [90, -6]);
+      label([0.2, 0.37, 0.119], 'Stiffener plate 12 mm', '6 pcs, welded to flange + plate', 's', [58, -46]);
+      label([0.19, 0.335, 0.19], '8 – M24 anchor bolts', 'plate washer + nut', 's', [-30, -95]);
+      label([0.1282, pTop + 0.003, -0.06], 'Fillet weld', 'all around the column', 's', [-110, 10], true);
+      label([0.3, 0.225, 0], 'Non-shrink grout', '50 mm', 'c', [80, 52], true);
+      label([0.19, -0.43, 0.19], 'Anchor plate + nut', 'embed ≈650 mm', 'r', [-64, 30], true);
+      label([0.19, 0.229, 0.065], 'Leveling nut', 'inside the grout', 'r', [-80, 40], true);
+    } else {
+      for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+        const x = sx * 0.065, z = sz * 0.07;
+        bolts.push(bar([[x, 0.314, z], [x, -0.25, z], [x + sx * 0.12, -0.25, z]], 0.02, 0.04));
+        bolts.push(hexNut(x, 0.222, z, 0.03, 0.018), disc(x, 0.24, z, 0.02, 0.004));
+        bolts.push(disc(x, pTop, z, 0.022, 0.004), hexNut(x, pTop + 0.004, z, 0.03, 0.018));
+        bolts.push(...threads(x, pTop + 0.024, 0.312, z, 0.0102));
+      }
+      label([0.125, 1.5, 0.06], 'H 250 × 250 × 9 × 14', 'red oxide primer', 's', [56, -20]);
+      label([0.175, 0.261, 0.1], 'Base plate 22 mm', '350 × 350, walang stiffener', 's', [90, -6]);
+      label([0.065, 0.305, 0.07], '4 – M20 anchor bolts', 'malapit sa web', 's', [-30, -95]);
+      label([0.1282, pTop + 0.003, -0.06], 'Fillet weld', 'all around the column', 's', [-110, 10], true);
+      label([0.225, 0.225, 0], 'Non-shrink grout', '50 mm', 'c', [80, 52], true);
+      label([0.15, -0.25, 0.07], 'L-bolt hook', 'embed ≈450 mm', 'r', [-60, 34], true);
+    }
+    label([0.375, -0.35, 0], 'RC pedestal 750 × 750', 'top 200 mm above grade', 'c', [56, -8]);
+    label([0.32, 0.08, 0.2], '3 ties @ 50 mm', 'confine the anchor bolts', 'r', [60, -30], true);
+    bend.uY0.value = pTop;
+  }
+
+  const add = (geos, mat) => {
+    if (!geos.length) return;
+    const m = new THREE.Mesh(mergeGeometries(geos), mat);
+    m.castShadow = m.receiveShadow = true; cfg.add(m);
+  };
+  add(rebar, M.rebar); add(bolts, M.galv); add(paint, M.paint); add(welds, M.weld); add(spacers, M.lean);
+  const tw = new THREE.TorusGeometry(0.017, 0.0011, 5, 18), im = new THREE.InstancedMesh(tw, M.wire, wires.length);
+  const q = new THREE.Quaternion(), m4 = new THREE.Matrix4(), one = new V3(1, 1, 1), zAxis = new V3(0, 0, 1);
+  wires.forEach(([x, y, z, k], i) => { q.setFromUnitVectors(zAxis, new V3(1, 0, k ? 1 : -1).normalize()); m4.compose(new V3(x, y, z), q, one); im.setMatrixAt(i, m4); });
+  cfg.add(im);
+  scene.add(cfg);
+
+  bend.uMode.value = state.support === 'fixed' ? 0 : 1;
+  bend.uL.value = (state.type === 'rc' ? 1.2 : 2.4) - bend.uY0.value;
+  applyView();
+}
+
+function applyView() {
+  const v = state.view;
+  for (const s of solids) {
+    s.full.visible = v !== 'cut';
+    s.full.material = v === 'xray' ? M.xray : s.formed;
+    s.full.castShadow = v !== 'xray';
+    s.cut.visible = v === 'cut';
+    s.edges.visible = v === 'xray';
+  }
+  for (const l of labels) l.userData.on = state.labels && !(l.userData.kind === 'r' && v === 'solid');
+  updateLabels();
+}
+// fine-detail callouts only appear once the camera is close enough to read them
+function updateLabels() {
+  for (const l of labels) l.visible = l.userData.on && (!l.userData.detail || camera.position.distanceTo(l.position) < 2.5);
+}
+function applySoil() {
+  site.soil.visible = site.ground.visible = state.soil;
+  site.floor.visible = !state.soil;
+}
+
+/* ------------------------------------------------------------------ */
+/* Detail sheet                                                       */
+/* ------------------------------------------------------------------ */
+const INFO = {
+  'rc-fixed': {
+    eyebrow: 'Detail 1 · Reinforced concrete column',
+    title: 'Fixed base',
+    lede: 'Buo (monolithic) ang column at footing. Tumutuloy pababa ang vertical bars ng column hanggang sa bottom mat ng footing at may 90° hook na nakapatong doon, kaya naipapasa ang moment papunta sa footing at sa lupa.',
+    notes: [
+      'Sa labas, plain concrete lang ang makikita: column na may chamfered na kanto na tumutubo mula sa footing. May guhit ng construction joint sa top of footing dahil magkaibang buhos ang dalawa.',
+      'Sa loob, tuloy-tuloy ang column bars at ties hanggang footing. May 2 ties pa sa loob ng footing para hawakan ang dowels.',
+      'Ang bottom mat ay 16 mm bars both ways na may hook sa dulo, nakapatong sa concrete spacers (dobos) para sa 75 mm na cover.',
+      'Sa itaas ng buhos, nakausli ang bars para sa lap splice ng susunod na column pour.',
+    ],
+    specs: [['Footing', '1.80 × 1.80 × 0.45 m'], ['Bottom bars', '12-16 mmØ each way'], ['Column', '0.40 × 0.40 m'], ['Column bars', '12-20 mmØ'], ['Ties', '10 mmØ: 1@50, 5@100, rest@150'], ['Dowel hook', '90°, 12db ≈ 240 mm'], ['Clear cover', '75 mm footing · 40 mm column'], ['Lean concrete', '75 mm']],
+    test: 'Fixed: zero ang rotation sa base. Ang column mismo ang bumabaluktot, at ang footing ang lumalaban sa moment.',
+  },
+  'rc-pinned': {
+    eyebrow: 'Detail 2 · Reinforced concrete column',
+    title: 'Pinned base (concrete hinge)',
+    lede: 'Walang totoong pin sa concrete. Pinapaliit ang section sa base (throat) para halos walang moment na maipasa, pero dumadaan pa rin ang axial load at shear.',
+    notes: [
+      'Sa labas, may manipis na joint sa pagitan ng column at footing na puno ng joint filler at sealant. Ang concrete ay tumatawid lang sa 130 mm na throat.',
+      'Sa loob, humihinto ang column bars 50 mm sa itaas ng joint. Crossed bars (Mesnager hinge) lang ang tumatawid, naka-X sa gitna ng throat.',
+      'Siksik ang ties sa itaas ng hinge, at may 2 layers ng mesh sa ilalim, para sa bursting force ng concentrated load.',
+      'Sa ordinaryong building, madalas "assumed pinned" lang ang base sa analysis (hal. maliit na footing sa malambot na lupa) kahit ang mismong detalye ay parang fixed.',
+    ],
+    specs: [['Throat', '130 × 400 mm, 50 mm high'], ['Crossed bars', '6-20 mmØ, ≈15° from vertical'], ['Column bars', 'stop 50 mm above joint'], ['Confinement', '4 ties @ 50 above hinge'], ['Bursting mesh', '2 layers 10 mmØ'], ['Joint filler', 'bituminous fiberboard + sealant'], ['Hinge axis', 'along Z (rotation in X–Y)']],
+    test: 'Pinned: may rotation sa base (θ ≠ 0) at walang moment doon. Kailangan ng beam o bracing sa itaas para hindi bumagsak ang column.',
+  },
+  'steel-fixed': {
+    eyebrow: 'Detail 3 · Structural steel column',
+    title: 'Fixed base',
+    lede: 'Makapal na base plate, 8 anchor bolts na nasa labas ng flanges (malaki ang lever arm), at stiffener plates na naka-weld sa column at plate. Hinihila ng bolts (tension) at tinutulak ng grout (compression) ang plate para labanan ang moment.',
+    notes: [
+      'Nakapatong ang plate sa 50 mm non-shrink grout sa ibabaw ng concrete pedestal.',
+      'May leveling nuts sa ilalim ng plate (nakabaon sa grout) at makapal na plate washers sa ibabaw.',
+      'Naka-embed ang anchor bolts ≈650 mm sa pedestal, may nut at anchor plate sa dulo.',
+      'Naka-hook sa footing ang pedestal bars, at may 3 ties @ 50 mm sa tuktok para hawakan ang anchor bolts.',
+      'Naka-red oxide primer ang bakal, gaya ng karaniwang makikita sa site.',
+    ],
+    specs: [['Column', 'H 250 × 250 × 9 × 14'], ['Base plate', '500 × 500 × 40 mm'], ['Anchor bolts', '8-M24, embed ≈650 mm'], ['Stiffeners', '6 pcs, 12 mm, h = 200 mm'], ['Grout', '50 mm non-shrink'], ['Pedestal', '0.75 × 0.75 m, 12-20 mmØ'], ['Footing', '1.80 × 1.80 × 0.45 m']],
+    test: 'Fixed: halos zero ang rotation sa plate. Bolts at stiffeners ang humahawak sa moment kaya ang column ang bumabaluktot.',
+  },
+  'steel-pinned': {
+    eyebrow: 'Detail 4 · Structural steel column',
+    title: 'Pinned base',
+    lede: 'Manipis na base plate at 4 anchor bolts na malapit sa web. Maliit ang lever arm kaya halos walang moment na kayang labanan; axial at shear lang ang naipapasa, at nakakaikot nang kaunti ang base.',
+    notes: [
+      'Walang stiffeners. Fillet weld lang sa paligid ng column papunta sa plate.',
+      'L-shaped anchor bolts (M20) na naka-embed ≈450 mm, sapat para sa shear at para hawakan ang column habang ini-erect.',
+      'Kailangan ng bracing o beam sa itaas para maging stable ang frame, dahil hindi kaya ng base ang moment.',
+      'Pareho ang pedestal at footing sa fixed. Nasa plate at bolts ang pagkakaiba.',
+    ],
+    specs: [['Column', 'H 250 × 250 × 9 × 14'], ['Base plate', '350 × 350 × 22 mm'], ['Anchor bolts', '4-M20 L-bolts, embed ≈450 mm'], ['Stiffeners', 'none'], ['Grout', '50 mm non-shrink'], ['Pedestal', '0.75 × 0.75 m'], ['Footing', '1.80 × 1.80 × 0.45 m']],
+    test: 'Pinned: umiikot ang column sa base (θ ≠ 0) at walang moment doon. Ang beam o bracing sa itaas ang nagpapatatag sa frame.',
+  },
+};
+function symbol(fixed) {
+  const hatch = (y, x0, x1) => { let s = ''; for (let x = x0 + 4; x <= x1; x += 8) s += `<line x1="${x}" y1="${y}" x2="${x - 8}" y2="${y + 9}"/>`; return s; };
+  return fixed
+    ? `<svg class="sym" viewBox="0 0 104 78" aria-hidden="true"><g stroke="currentColor" fill="none" stroke-linecap="round"><line x1="52" y1="6" x2="52" y2="50" stroke-width="7"/><line x1="18" y1="50" x2="86" y2="50" stroke-width="2.6"/><g stroke-width="1.4">${hatch(50, 18, 86)}</g></g></svg>`
+    : `<svg class="sym" viewBox="0 0 104 78" aria-hidden="true"><g stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="52" y1="6" x2="52" y2="31" stroke-width="7"/><circle cx="52" cy="35" r="4.5" stroke-width="2.6" fill="none"/><path d="M52 39.5 L39 58 H65 Z" stroke-width="2.6" fill="none"/><line x1="28" y1="58" x2="76" y2="58" stroke-width="2.6"/><g stroke-width="1.4">${hatch(58, 28, 76)}</g></g></svg>`;
+}
+function renderPanel() {
+  const fixed = state.support === 'fixed', d = INFO[`${state.type}-${state.support}`];
+  $('#p-eyebrow').textContent = d.eyebrow;
+  $('#p-title').textContent = d.title;
+  $('#p-body').innerHTML = `
+    <p class="lede">${d.lede}</p>
+    <div class="restraint">
+      ${symbol(fixed)}
+      <div>
+        <ul class="dof">
+          <li class="fix">ΔX = 0</li><li class="fix">ΔY = 0</li>
+          <li class="${fixed ? 'fix' : 'free'}">${fixed ? 'θ = 0' : 'θ ≠ 0, free'}</li>
+        </ul>
+        <p class="reac">${fixed ? '3 reactions: R<sub>x</sub>, R<sub>y</sub>, M' : '2 reactions: R<sub>x</sub>, R<sub>y</sub>. Walang moment (M = 0).'}</p>
+      </div>
+    </div>
+    ${state.test ? `<p class="testnote"><strong>Rotation test (exaggerated):</strong> ${d.test}</p>` : ''}
+    <h3>Ano ang makikita mo</h3>
+    <ul class="notes">${d.notes.map((n) => `<li>${n}</li>`).join('')}</ul>
+    <h3>Sample sizes sa model</h3>
+    <dl class="specs">${d.specs.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>
+    <p class="fine">Halimbawang sukat para sa visualization lang. Ang totoong sizes ay galing sa design (NSCP 2015 / ACI 318) ng structural engineer.</p>`;
+}
+
+/* ------------------------------------------------------------------ */
+/* Camera presets + UI                                                */
+/* ------------------------------------------------------------------ */
+const CAMS = {
+  rc: { overview: [[4.35, 1.75, 4.95], [0, 0.0, 0]], base: [[1.3, -0.5, 1.5], [0, -1.12, 0]], footing: [[1.85, -0.35, 2.15], [0, -1.33, 0]] },
+  steel: { overview: [[4.4, 2.2, 5.0], [0, 0.3, 0]], base: [[1.3, 0.95, 1.5], [0, 0.28, 0]], footing: [[1.9, 0.05, 2.25], [0, -0.62, 0]] },
+};
+let tween = null;
+function flyTo(name, instant = false) {
+  state.cam = name;
+  const [p, t] = CAMS[state.type][name];
+  // portrait screens have a narrow horizontal field of view, so back the camera off
+  const k = camera.aspect >= 1 ? 1 : Math.min(1.6, Math.pow(1 / camera.aspect, 0.55));
+  const to = { t: new V3(...t) };
+  to.p = new V3(...p).sub(to.t).multiplyScalar(k).add(to.t);
+  if (instant || reduceMotion) { camera.position.copy(to.p); controls.target.copy(to.t); tween = null; }
+  else tween = { p0: camera.position.clone(), t0: controls.target.clone(), ...to, start: performance.now(), dur: 1100 };
+  syncButtons();
+}
+function syncButtons() {
+  document.querySelectorAll('.seg-btns[data-key]').forEach((g) => g.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(state[g.dataset.key] === b.dataset.v))));
+  document.querySelectorAll('#cams button').forEach((b) => b.setAttribute('aria-pressed', String(state.cam === b.dataset.cam)));
+  $('#test').setAttribute('aria-pressed', String(state.test));
+}
+function setState(key, v) {
+  if (state[key] === v) return;
+  const prevType = state.type;
+  state[key] = v;
+  if (key === 'type' || key === 'support') {
+    build(); renderPanel();
+    if (key === 'type' && prevType !== v) flyTo(state.cam);
+  }
+  if (key === 'view') {
+    if (v === 'xray' && state.soil) { state.soil = false; $('#soil').checked = false; applySoil(); }
+    applyView();
+  }
+  syncButtons();
+}
+document.querySelectorAll('.seg-btns[data-key]').forEach((g) => g.addEventListener('click', (e) => {
+  const b = e.target.closest('button'); if (b) setState(g.dataset.key, b.dataset.v);
+}));
+$('#cams').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) flyTo(b.dataset.cam); });
+$('#soil').addEventListener('change', (e) => { state.soil = e.target.checked; applySoil(); });
+$('#labels').addEventListener('change', (e) => { state.labels = e.target.checked; applyView(); });
+$('#test').addEventListener('click', () => { state.test = !state.test; testT = 0; syncButtons(); renderPanel(); });
+$('#p-toggle').addEventListener('click', () => {
+  const p = $('#panel'), open = p.classList.toggle('collapsed') === false;
+  $('#p-toggle').setAttribute('aria-expanded', String(open));
+});
+controls.addEventListener('start', () => { tween = null; });
+
+function resize() {
+  const w = stage.clientWidth, h = stage.clientHeight;
+  renderer.setSize(w, h); labelRenderer.setSize(w, h);
+  camera.aspect = w / h;
+  if (w > 820) {
+    const left = $('.hud').offsetWidth + 16, right = w - $('#panel').offsetWidth - 16;
+    camera.setViewOffset(w, h, Math.round(w / 2 - (left + right) / 2), 0, w, h);
+  }
+  else camera.setViewOffset(w, h, 0, -Math.round($('.hud').offsetHeight * 0.3), w, h);
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', resize);
+
+let testT = 0;
+const clock = new THREE.Clock();
+function loop() {
+  const dt = Math.min(clock.getDelta(), 0.05);
+  if (tween) {
+    const k = Math.min(1, (performance.now() - tween.start) / tween.dur), e = k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+    camera.position.lerpVectors(tween.p0, tween.p, e); controls.target.lerpVectors(tween.t0, tween.t, e);
+    if (k >= 1) tween = null;
+  }
+  if (state.test) { testT += dt; bend.uA.value = 0.14 * Math.sin(testT * 1.7); }
+  else bend.uA.value = Math.abs(bend.uA.value) < 1e-4 ? 0 : bend.uA.value * 0.86;
+  controls.update();
+  updateLabels();
+  renderer.render(scene, camera);
+  labelRenderer.render(scene, camera);
+}
+
+async function init() {
+  setMsg('Naghahalo ng concrete…'); await nextFrame(); T.conc = genConcrete();
+  setMsg('Pinuputol ang aggregate…'); await nextFrame(); T.sec = genSection();
+  setMsg('Binabaluktot ang bakal…'); await nextFrame(); T.rebar = genRebar(); T.paint = genPaint(); T.filler = genFiller();
+  setMsg('Naghuhukay ng lupa…'); await nextFrame(); T.soil = genSoilWall(); T.ground = genGround();
+  makeMaterials();
+  buildSite();
+  build();
+  applySoil();
+  renderPanel();
+  if (window.innerWidth <= 820) { $('#panel').classList.add('collapsed'); $('#p-toggle').setAttribute('aria-expanded', 'false'); }
+  resize();
+  flyTo('overview', true);
+  renderer.setAnimationLoop(loop);
+  await nextFrame();
+  $('#loading').classList.add('done');
+  window.__ready = true;
+}
+init().catch((err) => { console.error(err); setMsg('Nagka-error sa pag-load ng 3D view: ' + err.message); });
+</script>
+
+</body>
+</html>
